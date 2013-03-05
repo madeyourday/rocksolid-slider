@@ -1,0 +1,57 @@
+.rsts-main,
+.rsts-main * {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.rsts-main {
+	position: absolute;
+}
+.rsts-view {
+	position: relative;
+	overflow: hidden;
+	cursor: hand;
+	cursor: grab;
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+.rsts-dragging .rsts-view {
+	cursor: grabbing;
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+.rsts-slides, .rsts-slide {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.rsts-slide img {
+	display: block;
+}
+
+/* default skin */
+.rsts-skin-default {
+	border: 10px solid #000;
+	padding: 10px;
+	background: #333;
+}
+.rsts-skin-default .rsts-slide {
+	background: #666;
+}
+.rsts-skin-default .rsts-slide img{
+	width: 100%;
+	height: auto;
+}
+.rsts-skin-default .rsts-nav-prev,
+.rsts-skin-default .rsts-nav-next {
+	position: absolute;
+	top: 50%;
+	left: 20px;
+	font-size: 50px;
+	text-decoration: none;
+	color: #000;
+}
+.rsts-skin-default .rsts-nav-next {
+	left: auto;
+	right: 20px;
+}
