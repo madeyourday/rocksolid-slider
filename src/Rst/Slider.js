@@ -333,12 +333,10 @@ Rst.Slider = (function() {
 		element.stop();
 
 		if (animate && this.css3Supported) {
-			css.transition = 'all ' +
-				(this.options.duration * durationScale) + 'ms ' +
-				(fromDrag ?
-					'cubic-bezier(0.390, 0.575, 0.565, 1.000)' :
-					'cubic-bezier(0.445, 0.050, 0.550, 0.950)'
-				);
+			css['transition-timing-function'] = fromDrag ?
+				'cubic-bezier(0.390, 0.575, 0.565, 1.000)' :
+				'cubic-bezier(0.445, 0.050, 0.550, 0.950)';
+			css['transition-duration'] = this.options.duration * durationScale + 'ms';
 			element.css(css);
 		}
 		else if (animate) {
@@ -351,7 +349,7 @@ Rst.Slider = (function() {
 			});
 		}
 		else if (this.css3Supported) {
-			css.transition = '';
+			css['transition-duration'] = '';
 			element.css(css);
 		}
 		else {
