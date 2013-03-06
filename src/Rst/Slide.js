@@ -18,6 +18,10 @@ Rst.Slide = (function() {
 
 		this.slider = slider;
 
+		this.data = {
+			name: $(element).attr('alt')
+		};
+
 		this.element = $(document.createElement('div'))
 			.addClass('rsts-slide')
 			.append(element);
@@ -69,7 +73,7 @@ Rst.Slide = (function() {
 	 * @return object {}
 	 */
 	Slide.prototype.getData = function() {
-		return {};
+		return this.data;
 	};
 
 	return Slide;

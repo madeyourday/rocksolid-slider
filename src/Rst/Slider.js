@@ -65,6 +65,7 @@ Rst.Slider = (function() {
 		this.resize();
 
 		this.nav = new Rst.SliderNav(this);
+		this.nav.setActive(this.slideIndex);
 
 		this.setDragEvents();
 		if (this.css3Supported) {
@@ -95,11 +96,13 @@ Rst.Slider = (function() {
 		// height
 		height: 'auto',
 		// number of slides to preload (to the left/right or top/bottom)
-		preloadSlides: 1,
+		preloadSlides: 3,
 		// gap between the slides
-		gapSize: 50,
+		gapSize: 20,
 		// duration of the slide animation
-		duration: 400
+		duration: 400,
+		// navigation type (bullets, numbers, tabs)
+		navType: 'bullets'
 	};
 
 	/**
@@ -117,6 +120,8 @@ Rst.Slider = (function() {
 
 		this.slideIndex = index;
 		this.preloadSlides(index);
+
+		this.nav.setActive(index);
 
 		var size = this.getViewSize(index);
 		var durationScale;
@@ -497,6 +502,10 @@ Rst.Slider = (function() {
 			'.no-drag,a,button,input,select,textarea',
 			this.elements.slides
 		).length) {
+			return;
+		}
+
+		if (event.type === 'mousedown' && event.which !== 1) {
 			return;
 		}
 

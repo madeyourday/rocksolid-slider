@@ -49,10 +49,7 @@
  * ========================================
 
 .rsts-skin-default
-	border: 10px solid #000
-	padding: 10px
-	background: #333
-
+	background: black
 	.rsts-slide
 		background: #666
 
@@ -66,8 +63,27 @@
 		left: 20px
 		font-size: 50px
 		text-decoration: none
-		color: #000
+		color: black
 
 	.rsts-nav-next
 		left: auto
 		right: 20px
+
+	.rsts-nav
+		display: block
+		text-align: center
+		background: #222
+		+box-shadow(0 0 10px black inset)
+		+text-shadow(0 0 1px black)
+		ul
+			margin: 0
+			padding: 0
+		li
+			display: inline
+		a
+			display: inline-block
+			padding: .5em
+			color: white
+			text-decoration: none
+			&:hover, &.active
+				background: #333

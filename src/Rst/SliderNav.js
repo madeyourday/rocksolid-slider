@@ -19,6 +19,7 @@ Rst.SliderNav = (function() {
 		var self = this;
 
 		this.slider = slider;
+		this.activeIndex = null;
 		this.elements = {
 			prev: $(document.createElement('a'))
 				.attr('href', '')
@@ -37,7 +38,10 @@ Rst.SliderNav = (function() {
 				})
 				.addClass(slider.options.cssPrefix + 'nav-next'),
 			main: $(document.createElement('div'))
-				.addClass(slider.options.cssPrefix + 'nav')
+				.addClass(
+					slider.options.cssPrefix + 'nav ' +
+					slider.options.cssPrefix + 'nav-' + slider.options.navType
+				)
 		};
 
 		var navUl = document.createElement('ul');
@@ -54,7 +58,21 @@ Rst.SliderNav = (function() {
 	}
 
 	/**
-	 * create a navigation item
+	 * set active nav element
+	 */
+	SliderNav.prototype.setActive = function(index) {
+
+		if (typeof this.activeIndex === 'number') {
+			this.elements[this.activeIndex].children('a').removeClass('active');
+		}
+
+		this.activeIndex = index;
+		this.elements[this.activeIndex].children('a').addClass('active');
+
+	};
+
+	/**
+	 * set
 	 * @return jQuery element
 	 */
 	SliderNav.prototype.createNavItem = function(index, data) {
@@ -64,7 +82,10 @@ Rst.SliderNav = (function() {
 		return $(document.createElement('li')).append(
 			$(document.createElement('a'))
 				.attr('href', '')
-				.text(data.name ? data.name : (index + 1))
+				.text((self.slider.options.navType !== 'numbers' && data.name) ?
+					data.name :
+					(index + 1)
+				)
 				.on('click', function(event){
 					event.preventDefault();
 					self.slider.goTo(index);
