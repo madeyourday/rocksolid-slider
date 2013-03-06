@@ -94,5 +94,16 @@ Rst.SliderNav = (function() {
 
 	};
 
+	/**
+	 * get size
+	 * @return object {x: ..., y: ...}
+	 */
+	SliderNav.prototype.getSize = function() {
+		return {
+			x: this.elements.main.outerWidth(),
+			y: this.elements.main.outerHeight()
+		};
+	};
+
 	return SliderNav;
 })();

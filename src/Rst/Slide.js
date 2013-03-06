@@ -22,11 +22,17 @@ Rst.Slide = (function() {
 			name: $(element).attr('alt')
 		};
 
+		this.type = 'default';
+		if (element.tagName.toLowerCase() === 'img') {
+			this.type = 'image';
+		}
+
 		this.element = $(document.createElement('div'))
-			.addClass('rsts-slide')
+			.addClass(slider.options.cssPrefix + 'slide')
+			.addClass(slider.options.cssPrefix + 'slide-' + this.type)
 			.append(element);
 
-		this.element.children('img').on('load', function(){
+		this.element.find('img').on('load', function(){
 			slider.resize();
 		});
 
@@ -44,27 +50,90 @@ Rst.Slide = (function() {
 		}
 
 		if (x && ! y) {
-			this.element.width(x);
+			this.slider.modify(this.element, {width: x});
 			if (ret) {
 				y = this.element.height();
 			}
 		}
 		else if (y && ! x) {
-			this.element.height(y);
+			this.slider.modify(this.element, {height: y});
 			if (ret) {
 				x = this.element.width();
 			}
+		}
+		else if (x && y) {
+			this.slider.modify(this.element, {width: x, height: y});
+			this.scaleContent(x, y);
 		}
 		else if(ret) {
 			x = this.element.width();
 			y = this.element.height();
 		}
 
-		if (ret) {
-			return {
-				x: x,
-				y: y
+		return {
+			x: x,
+			y: y
+		};
+
+	};
+
+	/**
+	 * scale slide contents based on width and height
+	 */
+	Slide.prototype.scaleContent = function(x, y) {
+
+		var originalSize, originalProp, newProp, css;
+		var image = this.element.find('img').first();
+		var scaleMode = this.slider.options.scaleMode;
+
+		if (this.type === 'image') {
+
+			image.css(css = {
+				width: 'auto',
+				'max-width': 'none',
+				'min-width': 0,
+				height: 'auto',
+				'max-height': 'none',
+				'min-height': 0,
+				'margin-left': 0,
+				'margin-top': 0
+			});
+			css['max-width'] = css['min-width'] = '';
+			css['max-height'] = css['min-height'] = '';
+
+			originalSize = {
+				x: image.width(),
+				y: image.height()
 			};
+			originalProp = originalSize.x / originalSize.y;
+			newProp = x / y;
+
+			if (scaleMode === 'fit' || scaleMode === 'crop') {
+
+				if (
+					(originalProp >= newProp && scaleMode === 'fit') ||
+					(originalProp <= newProp && scaleMode === 'crop')
+				) {
+					css.width = x;
+					css.height = x / originalProp;
+					css['margin-top'] = (y - css.height) / 2;
+				}
+				else {
+					css.width = y * originalProp;
+					css.height = y;
+					css['margin-left'] = (x - css.width) / 2;
+				}
+
+			}
+			else if (scaleMode === 'scale') {
+
+				css.width = x;
+				css.height = y;
+
+			}
+
+			image.css(css);
+
 		}
 
 	};

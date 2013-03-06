@@ -28,20 +28,28 @@
 .rsts-view
 	position: relative
 	overflow: hidden
-	cursor: url("../img/openhand.cur"), default
-	+experimental-value(cursor, grab)
-
-.rsts-dragging .rsts-view
-	cursor: url("../img/closedhand.cur"), default
-	+experimental-value(cursor, grabbing)
 
 .rsts-slides, .rsts-slide
 	position: absolute
 	left: 0
 	top: 0
 
+.rsts-slide
+	overflow: hidden
+
 .rsts-slide img
 	display: block
+
+.rsts-type-slide
+
+	.rsts-view
+		cursor: url("../img/openhand.cur"), default
+		+experimental-value(cursor, grab)
+
+	&.rsts-dragging .rsts-view
+		cursor: url("../img/closedhand.cur"), default
+		+experimental-value(cursor, grabbing)
+
 
 
 /* ===========================================
@@ -50,8 +58,6 @@
 
 .rsts-skin-default
 	background: black
-	.rsts-slide
-		background: #666
 
 	.rsts-slide img
 		width: 100%
@@ -80,6 +86,8 @@
 			padding: 0
 		li
 			display: inline
+
+	.rsts-nav-numbers, .rsts-nav-tabs
 		a
 			display: inline-block
 			padding: .5em
@@ -87,3 +95,17 @@
 			text-decoration: none
 			&:hover, &.active
 				background: #333
+
+	.rsts-nav-bullets
+		line-height: 0
+		a
+			display: inline-block
+			width: 8px
+			height: 8px
+			overflow: hidden
+			margin: 12px 4px
+			+border-radius(100%)
+			text-indent: -999px
+			background-color: #999
+			&:hover, &.active
+				background-color: #fff

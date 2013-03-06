@@ -46,6 +46,7 @@ Rst.Slider = (function() {
 		this.elements.main
 			.addClass(this.options.cssPrefix + 'main')
 			.addClass(this.options.cssPrefix + 'direction-' + this.options.direction)
+			.addClass(this.options.cssPrefix + 'type-' + this.options.type)
 			.addClass(this.options.cssPrefix + 'skin-' + this.options.skin)
 			.css({
 				width: this.options.width,
@@ -57,6 +58,10 @@ Rst.Slider = (function() {
 		this.elements.slides = $(document.createElement('div'))
 			.addClass(this.options.cssPrefix + 'slides')
 			.appendTo(this.elements.view);
+
+		this.nav = new Rst.SliderNav(this);
+		this.nav.setActive(this.slideIndex);
+
 		this.preloadSlides(0);
 		size = this.getViewSize();
 		$(window).on('resize.rsts', function(){
@@ -64,10 +69,13 @@ Rst.Slider = (function() {
 		});
 		this.resize();
 
-		this.nav = new Rst.SliderNav(this);
-		this.nav.setActive(this.slideIndex);
+		if (this.options.type === 'slide') {
+			this.setDragEvents();
+		}
+		else {
+			this.modify(this.slides[this.slideIndex].element, {opacity: 1});
+		}
 
-		this.setDragEvents();
 		if (this.css3Supported) {
 			this.elements.slides.on(
 				'transitionend webkitTransitionEnd oTransitionEnd msTransitionEnd',
@@ -83,10 +91,12 @@ Rst.Slider = (function() {
 	 * @var object default options
 	 */
 	Slider.prototype.defaultOptions = {
+		// slider type (slide or fade)
+		type: 'slide',
 		// "x" for horizontal or "y" for vertical
 		direction: 'x',
 		// if true the slides get shuffled once on initialization
-		random: true,
+		random: false,
 		// prefix for all RockSolid Slider specific css class names
 		cssPrefix: 'rsts-',
 		// slider skin (set this to "none" to disable the default skin)
@@ -94,32 +104,61 @@ Rst.Slider = (function() {
 		// width
 		width: '100%',
 		// height
-		height: 'auto',
+		height: '100%',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 3,
 		// gap between the slides
 		gapSize: 20,
-		// duration of the slide animation
+		// duration of the slide animation in milliseconds
 		duration: 400,
+		// false or the duration between slides in milliseconds
+		autoplay: false,
+		// false or the duration between user interaction and autoplay
+		// (must be bigger than autoplay)
+		autoplayRestart: 8000,
 		// navigation type (bullets, numbers, tabs)
-		navType: 'bullets'
+		navType: 'bullets',
+		// image scale mode (fit, crop, scale)
+		scaleMode: 'crop'
 	};
 
 	/**
 	 * slides to a specific slide
 	 * @param number index slide index
 	 */
-	Slider.prototype.goTo = function(index, fromDrag) {
+	Slider.prototype.goTo = function(index, fromDrag, fromAutoplay) {
+
+		if (!fromAutoplay) {
+			this.stopAutoplay();
+		}
 
 		var overflow = false;
 
 		if (index < 0 || index > this.slides.length - 1) {
+			if (this.options.type === 'fade') {
+				return;
+			}
 			overflow = true;
 			index = index < 0 ? 0 : this.slides.length - 1;
 		}
 
+		if (! overflow && this.slideIndex === index && ! fromDrag) {
+			return;
+		}
+
 		this.slideIndex = index;
-		this.preloadSlides(index);
+		if (
+			fromDrag &&
+			this.slides[index].element.get(0).parentNode &&
+			this.slides[index].element.get(0).parentNode.tagName
+		) {
+			// performance optimization
+			this.preloadOnCleanup = true;
+		}
+		else {
+			console.debug(this.slides[index].element.get(0).parentNode);
+			this.preloadSlides(index);
+		}
 
 		this.nav.setActive(index);
 
@@ -136,13 +175,66 @@ Rst.Slider = (function() {
 			durationScale = 0.7;
 		}
 
-		this.modify(this.elements.slides, {
-			offset: (size[this.options.direction] + this.options.gapSize) * -index
-		}, true, durationScale, fromDrag, overflow && !fromDrag);
-		this.modify(this.elements.view, {
-			width: size.x,
-			height: size.y
-		}, true, durationScale, fromDrag);
+		if (this.options.type === 'slide') {
+			this.modify(this.elements.slides, {
+				offset: (size[this.options.direction] + this.options.gapSize) * -index
+			}, true, durationScale, fromDrag, overflow && !fromDrag);
+		}
+		else if (this.options.type === 'fade') {
+			this.modify(this.slides[this.slideIndex].element, {opacity: 1}, true);
+		}
+
+		if (this.options.height === 'auto' || this.options.width === 'auto') {
+			this.modify(this.elements.view, {
+				width: size.x,
+				height: size.y
+			}, true, durationScale, fromDrag);
+		}
+
+	};
+
+	/**
+	 * stops/restarts autoplay
+	 */
+	Slider.prototype.stopAutoplay = function() {
+
+		var self = this;
+
+		clearTimeout(this.autoplayTimeout);
+		clearInterval(this.autoplayInterval);
+
+		if (this.options.autoplayRestart) {
+			this.autoplayTimeout = setTimeout(function() {
+				self.autoplay();
+			}, this.options.autoplayRestart - this.options.autoplay);
+		}
+
+	};
+
+	/**
+	 * starts autoplay
+	 * @param boolean restart true if autoplay should be restarted
+	 */
+	Slider.prototype.autoplay = function() {
+
+		var self = this;
+
+		if (!this.options.autoplay) {
+			return;
+		}
+
+		var intervalFunction = function() {
+			var index = self.slideIndex + 1;
+			if (index > self.slides.length - 1) {
+				index = 0;
+			}
+			self.goTo(index, false, true);
+		};
+
+		this.autoplayTimeout = setTimeout(function() {
+			intervalFunction();
+			self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
+		}, this.options.autoplay - this.options.duration);
 
 	};
 
@@ -315,6 +407,8 @@ Rst.Slider = (function() {
 			self.slides.push(new Rst.Slide(this, self));
 		});
 
+		this.elements.main.empty();
+
 	};
 
 	/**
@@ -323,27 +417,49 @@ Rst.Slider = (function() {
 	Slider.prototype.preloadSlides = function(slideIndex) {
 
 		var self = this;
-		var preloadCount = this.options.preloadSlides;
+		var preloadCount = this.options.type === 'slide' ?
+			this.options.preloadSlides :
+			0;
 		var width, height;
 		if (this.options.width !== 'auto') {
 			width = this.elements.main.width();
 		}
 		if (this.options.height !== 'auto') {
 			height = this.elements.main.height();
+			height -= this.nav.getSize().y;
 		}
 
 		$.each(this.slides, function(i, slide) {
 			if (i >= slideIndex - preloadCount && i <= slideIndex + preloadCount) {
 				if (! slide.element.get(0).parentNode || ! slide.element.get(0).parentNode.tagName) {
+					if (self.options.type === 'fade') {
+						self.modify(slide.element, {opacity: 0});
+					}
 					self.elements.slides.append(slide.element);
 					slide.size(width, height);
 				}
-				self.modify(slide.element, {
-					offset: i * (
-						(self.options.direction === 'x' ? width : height) +
-						self.options.gapSize
-					)
-				});
+				else if (
+					self.options.type === 'fade' &&
+					i === self.slideIndex &&
+					slide.element.next().length
+				) {
+					if (slide.element.next().length === 1) {
+						self.modify(slide.element, {opacity: 1 - slide.element.next().css('opacity')});
+						self.modify(slide.element.next(), {opacity: 1});
+					}
+					else {
+						self.modify(slide.element, {opacity: 0});
+					}
+					self.elements.slides.append(slide.element);
+				}
+				if (self.options.type === 'slide') {
+					self.modify(slide.element, {
+						offset: i * (
+							(self.options.direction === 'x' ? width : height) +
+							self.options.gapSize
+						)
+					});
+				}
 			}
 		});
 
@@ -355,16 +471,29 @@ Rst.Slider = (function() {
 	Slider.prototype.cleanupSlides = function() {
 
 		var self = this;
-		var preloadCount = this.options.preloadSlides;
+		var preloadCount = this.options.type === 'slide' ?
+			this.options.preloadSlides :
+			0;
 
 		$.each(this.slides, function(i, slide) {
 			if (
 				(i < self.slideIndex - preloadCount || i > self.slideIndex + preloadCount) &&
 				slide.element.get(0).parentNode && slide.element.get(0).parentNode.tagName
 			) {
+				if (
+					self.options.type === 'fade' &&
+					self.slides[self.slideIndex].element.css('opacity') < 1
+				) {
+					return;
+				}
 				slide.element.detach();
 			}
 		});
+
+		if (this.preloadOnCleanup) {
+			this.preloadOnCleanup = false;
+			this.preloadSlides(this.slideIndex);
+		}
 
 	};
 
@@ -375,7 +504,7 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getViewSize = function(slideIndex) {
 
-		var x, y, slideSize;
+		var x, y, size;
 		slideIndex = slideIndex || 0;
 
 		if (this.options.width !== 'auto') {
@@ -383,18 +512,22 @@ Rst.Slider = (function() {
 		}
 		if (this.options.height !== 'auto') {
 			y = this.elements.main.height();
+			y -= this.nav.getSize().y;
 		}
 
-		this.slideSize = this.options.direction === 'x' ? x : y;
-
 		if (x && y) {
-			return {
+			size = {
 				x: x,
 				y: y
 			};
 		}
+		else {
+			size = this.slides[slideIndex].size(x, y, true);
+		}
 
-		return this.slides[slideIndex].size(x, y, true);
+		this.slideSize = size[this.options.direction];
+
+		return size;
 
 	};
 
@@ -422,17 +555,21 @@ Rst.Slider = (function() {
 		$.each(this.slides, function(i, slide) {
 			if (slide.element.get(0).parentNode && slide.element.get(0).parentNode.tagName) {
 				slide.size(width, height);
-				self.modify(slide.element, {
-					offset: i * (
-						(self.options.direction === 'x' ? width : height) +
-						self.options.gapSize
-					)
-				});
+				if (self.options.type === 'slide') {
+					self.modify(slide.element, {
+						offset: i * (
+							(self.options.direction === 'x' ? width : height) +
+							self.options.gapSize
+						)
+					});
+				}
 			}
 		});
-		this.modify(this.elements.slides, {
-			offset: (size[this.options.direction] + self.options.gapSize) * -this.slideIndex
-		});
+		if (this.options.type === 'slide') {
+			this.modify(this.elements.slides, {
+				offset: (size[this.options.direction] + self.options.gapSize) * -this.slideIndex
+			});
+		}
 
 	};
 
@@ -513,6 +650,7 @@ Rst.Slider = (function() {
 
 		if (! this.hasTouch) {
 			event.preventDefault();
+			this.stopAutoplay();
 		}
 
 		this.elements.main.addClass(this.options.cssPrefix + 'dragging');
@@ -552,7 +690,7 @@ Rst.Slider = (function() {
 
 		var leftSlideIndex = Math.floor(
 			this.getOffset(this.elements.slides) * -1 /
-			(this.elements.main.width() + this.options.gapSize)
+			(this.slideSize + this.options.gapSize)
 		);
 
 		if (this.dragLastDiff <= 0) {
@@ -592,6 +730,7 @@ Rst.Slider = (function() {
 
 			if (this.touchAxis === this.options.direction) {
 				event.preventDefault();
+				this.stopAutoplay();
 			}
 			else if (! this.touchAxis) {
 				return;
@@ -608,6 +747,7 @@ Rst.Slider = (function() {
 		}
 		else {
 			event.preventDefault();
+			this.stopAutoplay();
 		}
 
 		var posDiff = this.dragLastPos - pos[this.options.direction];
