@@ -35,26 +35,47 @@ Rst.Slider = (function() {
 		}
 
 		this.checkCss3Support();
-		this.readSlides();
 
+		this.readSlides();
 		if (this.options.random) {
 			this.slides.sort(function() {
 				return Math.random() - 0.5;
 			});
 		}
+		this.slides[0].setState('active');
 
 		this.elements.main
 			.addClass(this.options.cssPrefix + 'main')
 			.addClass(this.options.cssPrefix + 'direction-' + this.options.direction)
 			.addClass(this.options.cssPrefix + 'type-' + this.options.type)
-			.addClass(this.options.cssPrefix + 'skin-' + this.options.skin)
-			.css({
-				width: this.options.width,
-				height: this.options.height
-			});
+			.addClass(this.options.cssPrefix + 'skin-' + this.options.skin);
+
+		if (
+			this.options.direction === 'x' &&
+			this.options.height === 'css' &&
+			this.elements.main.height() < 1
+		) {
+			this.options.height = 'auto';
+		}
+		else if (
+			this.options.direction === 'y' &&
+			this.options.width === 'css' &&
+			this.elements.main.width() < 1
+		) {
+			this.options.width = 'auto';
+		}
+
+		if (this.options.width !== 'css') {
+			this.elements.main.css({width: this.options.width});
+		}
+		if (this.options.height !== 'css') {
+			this.elements.main.css({height: this.options.height});
+		}
+
 		this.elements.view = $(document.createElement('div'))
 			.addClass(this.options.cssPrefix + 'view')
 			.appendTo(this.elements.main);
+
 		this.elements.slides = $(document.createElement('div'))
 			.addClass(this.options.cssPrefix + 'slides')
 			.appendTo(this.elements.view);
@@ -85,6 +106,8 @@ Rst.Slider = (function() {
 			);
 		}
 
+		this.autoplay();
+
 	}
 
 	/**
@@ -101,10 +124,10 @@ Rst.Slider = (function() {
 		cssPrefix: 'rsts-',
 		// slider skin (set this to "none" to disable the default skin)
 		skin: 'default',
-		// width
-		width: '100%',
-		// height
-		height: '100%',
+		// "auto", a css lenght value or "css" to get the size from the css
+		width: 'css',
+		// "auto", a css lenght value or "css" to get the size from the css
+		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 3,
 		// gap between the slides
@@ -113,13 +136,16 @@ Rst.Slider = (function() {
 		duration: 400,
 		// false or the duration between slides in milliseconds
 		autoplay: false,
+		// true to autoplay videos
+		videoAutoplay: false,
 		// false or the duration between user interaction and autoplay
 		// (must be bigger than autoplay)
-		autoplayRestart: 8000,
+		autoplayRestart: false,
 		// navigation type (bullets, numbers, tabs)
 		navType: 'bullets',
 		// image scale mode (fit, crop, scale)
-		scaleMode: 'crop'
+		// only works if width and height are not set to "auto"
+		scaleMode: 'fit'
 	};
 
 	/**
@@ -146,6 +172,11 @@ Rst.Slider = (function() {
 			return;
 		}
 
+		if (this.slideIndex !== index) {
+			this.slides[this.slideIndex].setState('postactive');
+			this.slides[index].setState('preactive');
+		}
+
 		this.slideIndex = index;
 		if (
 			fromDrag &&
@@ -156,7 +187,6 @@ Rst.Slider = (function() {
 			this.preloadOnCleanup = true;
 		}
 		else {
-			console.debug(this.slides[index].element.get(0).parentNode);
 			this.preloadSlides(index);
 		}
 
@@ -248,6 +278,9 @@ Rst.Slider = (function() {
 
 		this.css3Supported = false;
 
+		// currently only detecting mozilla is needed
+		this.engine = 'mozInnerScreenX' in window ? 'moz' : 'unknown';
+
 		var el = document.createElement('div');
 		document.body.appendChild(el);
 		var style = el.style;
@@ -320,9 +353,11 @@ Rst.Slider = (function() {
 					css.transform += ',0';
 				}
 				css.transform += ',0)';
+				css[{x: 'left', y: 'top'}[this.options.direction]] = '';
 			}
 			else {
 				css[{x: 'left', y: 'top'}[this.options.direction]] = css.offset;
+				css.transform = '';
 			}
 
 			delete css.offset;
@@ -348,11 +383,8 @@ Rst.Slider = (function() {
 				} : null
 			});
 		}
-		else if (this.css3Supported) {
-			css['transition-duration'] = '';
-			element.css(css);
-		}
 		else {
+			css['transition-duration'] = '';
 			element.css(css);
 		}
 
@@ -433,6 +465,14 @@ Rst.Slider = (function() {
 					if (self.options.type === 'fade') {
 						self.modify(slide.element, {opacity: 0});
 					}
+					else if (self.options.type === 'slide') {
+						self.modify(slide.element, {
+							offset: i * (
+								(self.options.direction === 'x' ? width : height) +
+								self.options.gapSize
+							)
+						});
+					}
 					self.elements.slides.append(slide.element);
 					slide.size(width, height);
 				}
@@ -450,14 +490,6 @@ Rst.Slider = (function() {
 					}
 					self.elements.slides.append(slide.element);
 				}
-				if (self.options.type === 'slide') {
-					self.modify(slide.element, {
-						offset: i * (
-							(self.options.direction === 'x' ? width : height) +
-							self.options.gapSize
-						)
-					});
-				}
 			}
 		});
 
@@ -467,6 +499,8 @@ Rst.Slider = (function() {
 	 * removes Slide objects from the DOM
 	 */
 	Slider.prototype.cleanupSlides = function() {
+
+		this.slides[this.slideIndex].setState('active');
 
 		var self = this;
 		var preloadCount = this.options.type === 'slide' ?
@@ -485,6 +519,9 @@ Rst.Slider = (function() {
 					return;
 				}
 				slide.element.detach();
+			}
+			if (i !== self.slideIndex && slide.state !== 'inactive') {
+				slide.setState('inactive');
 			}
 		});
 

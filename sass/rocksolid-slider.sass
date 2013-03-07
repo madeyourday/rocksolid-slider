@@ -22,9 +22,6 @@
 .rsts-main, .rsts-main *
 	+box-sizing(border-box)
 
-.rsts-main
-	position: absolute
-
 .rsts-view
 	position: relative
 	overflow: hidden
@@ -57,7 +54,10 @@
  * ========================================
 
 .rsts-skin-default
-	background: black
+
+	&.rsts-main
+		position: relative
+		background: black
 
 	.rsts-slide img
 		width: 100%
@@ -109,3 +109,58 @@
 			background-color: #999
 			&:hover, &.active
 				background-color: #fff
+
+	.rsts-video-play, .rsts-video-stop
+		position: absolute
+		top: 50%
+		left: 50%
+		width: 64px
+		height: 64px
+		overflow: hidden
+		margin: -32px 0 0 -32px
+		+border-radius(15px)
+		text:
+			indent: -999px
+			decoration: none
+		background: black
+		background: rgba(black, .8)
+		&:before
+			content: ""
+			position: absolute
+			top: 20px
+			left: 24px
+			display: block
+			border: 12px solid transparent
+				left-color: white
+				left-width: 23px
+				right-width: 0
+		&:hover, &:focus
+			background: white
+			background: rgba(white, .8)
+			+box-shadow(0 0 16px rgba(black, .3))
+			&:before
+				border-left-color: black
+
+	.rsts-video-stop
+		top: 10px
+		left: auto
+		right: 10px
+		margin: 0
+		+border-radius(5px)
+		width: 32px
+		height: 32px
+		&:before
+			content: "\d7"
+			top: 8px
+			left: 8px
+			width: 16px
+			height: 16px
+			border: 0
+			color: white
+			font:
+				size: 23px
+				weight: bold
+			line-height: 18px
+			text:
+				align: center
+				indent: 0
