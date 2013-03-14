@@ -1,5 +1,4 @@
 /node_modules
-/rocksolid-slider.js
-/rocksolid-slider.min.js
+/rocksolid-slider-*.js
 /css
 .sass-cache
