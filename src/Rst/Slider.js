@@ -104,6 +104,9 @@ Rst.Slider = (function() {
 					self.cleanupSlides();
 				}
 			);
+			this.elements.view.css({
+				transform: 'translateZ(0)'
+			});
 		}
 
 		this.autoplay();

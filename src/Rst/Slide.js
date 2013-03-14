@@ -220,6 +220,17 @@ Rst.Slide = (function() {
 			delete this.videoStopButton;
 		}
 
+		// mozilla has problems with iframes/flash and 3D transforms
+		if (
+			this.slider.engine === 'moz' &&
+			this.slider.css3Supported &&
+			this.slider.options.type === 'slide'
+		) {
+			this.slider.elements.view.css({
+				transform: 'translateZ(0)'
+			});
+		}
+
 	};
 
 	/**
@@ -332,6 +343,9 @@ Rst.Slide = (function() {
 			this.slider.modify(this.slider.elements.slides, {
 				offset: - this.slider.slideIndex *
 					(this.slider.slideSize + this.slider.options.gapSize)
+			});
+			this.slider.elements.view.css({
+				transform: ''
 			});
 			this.slider.css3Supported = true;
 		}
