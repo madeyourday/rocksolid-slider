@@ -7,6 +7,7 @@
 
 
 @import "mixins"
+@import "compass/css3/images"
 @import "compass/css3/border-radius"
 @import "compass/css3/box-shadow"
 @import "compass/css3/text-shadow"
@@ -57,7 +58,7 @@
 
 	&.rsts-main
 		position: relative
-		background: black
+		margin: auto
 
 	.rsts-slide img
 		width: 100%
@@ -65,22 +66,68 @@
 
 	.rsts-nav-prev, .rsts-nav-next
 		position: absolute
-		top: 50%
 		left: 20px
-		font-size: 50px
-		text-decoration: none
-		color: black
+		top: 50%
+		opacity: 0
+		overflow: hidden
+		width: 36px
+		height: 36px
+		margin-top: -34px
+		border: 1px solid #bbb
+		+border-radius(100%)
+		line-height: 0
+		text:
+			align: center
+			decoration: none
+			indent: -9999px
+		background: white
+		+background-image(radial-gradient(white 12px, #bbb 22px))
+		+single-transition(opacity, 0.2s, ease-in)
+		+box-shadow(0 0 5px 3px rgba(black, 0), 0 0 1px 2px rgba(black, 0.1), inset 0 2px 0 -1px white)
+		&:after
+			content: "\203a"
+			display: block
+			padding-top: 8px
+			font: bold 16px/1 "Verdana", monospace
+			text-indent: 0
+			color: #555
+	.rsts-nav-prev:after
+		content: "\2039"
+
+	&:hover
+		.rsts-nav-prev, .rsts-nav-next
+			opacity: 0.4
+			&:hover
+				opacity: 1
+				+transition-duration(0.05s)
+				+animation('shadow-pulse 1s')
+				+animation-property('iteration-count', 'infinite')
 
 	.rsts-nav-next
 		left: auto
 		right: 20px
 
+	&.rsts-direction-y
+		.rsts-nav-prev, .rsts-nav-next
+			left: 50%
+			top: 10px
+			margin-top: 0
+			margin-left: -18px
+			&:after
+				content: "\25b2"
+				padding-top: 9px
+				font-size: 11px
+				color: #555
+		.rsts-nav-next
+			top: auto
+			bottom: 42px
+			&:after
+				content: "\25bc"
+				padding-top: 11px
+
 	.rsts-nav
 		display: block
 		text-align: center
-		background: #222
-		+box-shadow(0 0 10px black inset)
-		+text-shadow(0 0 1px black)
 		ul
 			margin: 0
 			padding: 0
@@ -108,38 +155,37 @@
 			text-indent: -999px
 			background-color: #999
 			&:hover, &.active
-				background-color: #fff
+				background-color: #ccc
 
 	.rsts-video-play, .rsts-video-stop
 		position: absolute
-		top: 50%
 		left: 50%
+		top: 50%
 		width: 64px
 		height: 64px
 		overflow: hidden
 		margin: -32px 0 0 -32px
-		+border-radius(15px)
+		+border-radius(5px)
 		text:
 			indent: -999px
 			decoration: none
 		background: black
 		background: rgba(black, .8)
 		&:before
-			content: ""
+			content: "\25ba"
 			position: absolute
-			top: 20px
-			left: 24px
+			left: 17px
+			top: 12px
 			display: block
-			border: 12px solid transparent
-				left-color: white
-				left-width: 23px
-				right-width: 0
+			font-size: 36px
+			color: #fff
+			text-indent: 0
 		&:hover, &:focus
 			background: white
 			background: rgba(white, .8)
-			+box-shadow(0 0 16px rgba(black, .3))
+			+box-shadow(0 0 10px rgba(black, .3))
 			&:before
-				border-left-color: black
+				color: #000
 
 	.rsts-video-stop
 		top: 10px
@@ -164,3 +210,7 @@
 			text:
 				align: center
 				indent: 0
+
+@include keyframes('shadow-pulse')
+	50%
+		+box-shadow(0 0 5px 3px rgba(black, 0.2), 0 0 1px 2px rgba(black, 0.1), inset 0 2px 0 -1px white)
