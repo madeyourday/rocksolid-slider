@@ -50,10 +50,10 @@ Rst.SliderNav = (function() {
 		});
 
 		this.elements.main.append(navUl);
-		slider.elements.main
+		slider.elements.main.append(this.elements.main);
+		slider.elements.view
 			.append(this.elements.prev)
-			.append(this.elements.next)
-			.append(this.elements.main);
+			.append(this.elements.next);
 
 	}
 
