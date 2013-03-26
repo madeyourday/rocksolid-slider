@@ -23,7 +23,7 @@ Rst.SliderNav = (function() {
 		this.elements = {
 			prev: $(document.createElement('a'))
 				.attr('href', '')
-				.text('<')
+				.text('prev')
 				.addClass(slider.options.cssPrefix + 'nav-prev')
 				.on('click', function(event){
 					event.preventDefault();
@@ -31,7 +31,7 @@ Rst.SliderNav = (function() {
 				}),
 			next: $(document.createElement('a'))
 				.attr('href', '')
-				.text('>')
+				.text('next')
 				.on('click', function(event){
 					event.preventDefault();
 					self.slider.next();

@@ -80,6 +80,14 @@ Rst.Slider = (function() {
 			.addClass(this.options.cssPrefix + 'slides')
 			.appendTo(this.elements.view);
 
+		if (this.options.autoplay && this.options.autoplayProgress) {
+			this.elements.progress = $(document.createElement('div'))
+				.addClass(this.options.cssPrefix + 'progress')
+				.appendTo(this.elements.main);
+			this.elements.progressBar = $(document.createElement('div'))
+				.appendTo(this.elements.progress);
+		}
+
 		this.nav = new Rst.SliderNav(this);
 		this.nav.setActive(this.slideIndex);
 
@@ -100,8 +108,10 @@ Rst.Slider = (function() {
 		if (this.css3Supported) {
 			this.elements.slides.on(
 				'transitionend webkitTransitionEnd oTransitionEnd msTransitionEnd',
-				function() {
-					self.cleanupSlides();
+				function(event) {
+					if (event.target === self.elements.slides.get(0)) {
+						self.cleanupSlides();
+					}
 				}
 			);
 			this.elements.view.css({
@@ -144,6 +154,8 @@ Rst.Slider = (function() {
 		// false or the duration between user interaction and autoplay
 		// (must be bigger than autoplay)
 		autoplayRestart: false,
+		// displays a progress bar
+		autoplayProgress: true,
 		// navigation type (bullets, numbers, tabs)
 		navType: 'bullets',
 		// image scale mode (fit, crop, scale)
@@ -236,6 +248,10 @@ Rst.Slider = (function() {
 		clearTimeout(this.autoplayTimeout);
 		clearInterval(this.autoplayInterval);
 
+		if (this.options.autoplay && this.options.autoplayProgress) {
+			this.elements.progress.removeClass(this.options.cssPrefix + 'progress-active');
+		}
+
 		if (this.options.autoplayRestart) {
 			this.autoplayTimeout = setTimeout(function() {
 				self.autoplay();
@@ -246,7 +262,6 @@ Rst.Slider = (function() {
 
 	/**
 	 * starts autoplay
-	 * @param boolean restart true if autoplay should be restarted
 	 */
 	Slider.prototype.autoplay = function() {
 
@@ -256,18 +271,46 @@ Rst.Slider = (function() {
 			return;
 		}
 
+		this.startAutoplayProgressBar(this.options.autoplay - this.options.duration);
+
 		var intervalFunction = function() {
 			var index = self.slideIndex + 1;
 			if (index > self.slides.length - 1) {
 				index = 0;
 			}
 			self.goTo(index, false, true);
+			self.startAutoplayProgressBar();
 		};
 
 		this.autoplayTimeout = setTimeout(function() {
 			intervalFunction();
 			self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
 		}, this.options.autoplay - this.options.duration);
+
+	};
+
+	Slider.prototype.startAutoplayProgressBar = function(duration) {
+
+		if (! this.options.autoplayProgress) {
+			return;
+		}
+
+		this.elements.progress.addClass(this.options.cssPrefix + 'progress-active');
+		this.modify(this.elements.progressBar, {width: 0});
+
+		// get the css value to ensure the engine applies the width
+		this.elements.progressBar.css('width');
+
+		this.modify(
+			this.elements.progressBar,
+			{width: '100%'},
+			true,
+			null,
+			null,
+			null,
+			duration ? duration : this.options.autoplay,
+			'linear'
+		);
 
 	};
 
@@ -329,7 +372,7 @@ Rst.Slider = (function() {
 	 * @param jQuery element element to animate
 	 * @param object css     property value pairs to animate
 	 */
-	Slider.prototype.modify = function(element, css, animate, durationScale, fromDrag, bounce) {
+	Slider.prototype.modify = function(element, css, animate, durationScale, fromDrag, bounce, duration, timingFunction) {
 
 		var self = this;
 		var origOffset;
@@ -371,16 +414,19 @@ Rst.Slider = (function() {
 		element.stop();
 
 		if (animate && this.css3Supported) {
-			css['transition-timing-function'] = fromDrag ?
+			css['transition-timing-function'] = timingFunction ?
+				timingFunction : fromDrag ?
 				'cubic-bezier(0.390, 0.575, 0.565, 1.000)' :
 				'cubic-bezier(0.445, 0.050, 0.550, 0.950)';
-			css['transition-duration'] = this.options.duration * durationScale + 'ms';
+			css['transition-duration'] = duration ? duration + 'ms' :
+				this.options.duration * durationScale + 'ms';
 			element.css(css);
 		}
 		else if (animate) {
 			element.animate(css, {
 				duration: this.options.duration * durationScale,
-				easing: fromDrag ? 'easeOutSine' : 'easeInOutSine',
+				easing: timingFunction ? timingFunction :
+					fromDrag ? 'easeOutSine' : 'easeInOutSine',
 				complete: element === this.elements.slides ? function() {
 					self.cleanupSlides();
 				} : null
@@ -503,8 +549,6 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.cleanupSlides = function() {
 
-		this.slides[this.slideIndex].setState('active');
-
 		var self = this;
 		var preloadCount = this.options.type === 'slide' ?
 			this.options.preloadSlides :
@@ -527,6 +571,8 @@ Rst.Slider = (function() {
 				slide.setState('inactive');
 			}
 		});
+
+		this.slides[this.slideIndex].setState('active');
 
 		if (this.preloadOnCleanup) {
 			this.preloadOnCleanup = false;
