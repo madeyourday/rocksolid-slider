@@ -236,7 +236,7 @@ Rst.Slide = (function() {
 			this.slider.css3Supported &&
 			this.slider.options.type === 'slide'
 		) {
-			this.slider.elements.view.css({
+			this.slider.elements.crop.css({
 				transform: 'translateZ(0)'
 			});
 		}
@@ -354,7 +354,7 @@ Rst.Slide = (function() {
 				offset: - this.slider.slideIndex *
 					(this.slider.slideSize + this.slider.options.gapSize)
 			});
-			this.slider.elements.view.css({
+			this.slider.elements.crop.css({
 				transform: ''
 			});
 			this.slider.css3Supported = true;

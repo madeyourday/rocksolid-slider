@@ -76,14 +76,18 @@ Rst.Slider = (function() {
 			.addClass(this.options.cssPrefix + 'view')
 			.appendTo(this.elements.main);
 
+		this.elements.crop = $(document.createElement('div'))
+			.addClass(this.options.cssPrefix + 'crop')
+			.appendTo(this.elements.view);
+
 		this.elements.slides = $(document.createElement('div'))
 			.addClass(this.options.cssPrefix + 'slides')
-			.appendTo(this.elements.view);
+			.appendTo(this.elements.crop);
 
 		if (this.options.autoplay && this.options.autoplayProgress) {
 			this.elements.progress = $(document.createElement('div'))
 				.addClass(this.options.cssPrefix + 'progress')
-				.appendTo(this.elements.main);
+				.appendTo(this.elements.view);
 			this.elements.progressBar = $(document.createElement('div'))
 				.appendTo(this.elements.progress);
 		}
@@ -114,7 +118,7 @@ Rst.Slider = (function() {
 					}
 				}
 			);
-			this.elements.view.css({
+			this.elements.crop.css({
 				transform: 'translateZ(0)'
 			});
 		}
@@ -230,7 +234,7 @@ Rst.Slider = (function() {
 		}
 
 		if (this.options.height === 'auto' || this.options.width === 'auto') {
-			this.modify(this.elements.view, {
+			this.modify(this.elements.crop, {
 				width: size.x,
 				height: size.y
 			}, true, durationScale, fromDrag);
@@ -624,7 +628,7 @@ Rst.Slider = (function() {
 		var size, width, height;
 
 		size = this.getViewSize(this.slideIndex);
-		this.modify(this.elements.view, {
+		this.modify(this.elements.crop, {
 			width: size.x,
 			height: size.y
 		});
@@ -699,7 +703,7 @@ Rst.Slider = (function() {
 			this.hasTouch = true;
 		}
 
-		this.elements.view.on(eventNames.start, function(event) {
+		this.elements.crop.on(eventNames.start, function(event) {
 			return self.onDragStart(event);
 		});
 		$(document).on(eventNames.stop + '.rsts', function(event) {
@@ -741,8 +745,8 @@ Rst.Slider = (function() {
 
 		this.isDragging = true;
 		this.dragStartPos = {
-			x: pos.x - this.elements.slides.offset().left + this.elements.view.offset().left,
-			y: pos.y - this.elements.slides.offset().top + this.elements.view.offset().top
+			x: pos.x - this.elements.slides.offset().left + this.elements.crop.offset().left,
+			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().left
 		};
 		this.dragLastPos = this.dragStartPos[this.options.direction];
 		this.dragLastDiff = 0;
