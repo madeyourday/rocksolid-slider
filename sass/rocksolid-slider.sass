@@ -64,6 +64,21 @@
 		width: 100%
 		height: auto
 
+	.rsts-caption
+		position: absolute
+		top: 20px
+		left: 20px
+		padding: 5px 10px
+		color: white
+		background: black
+		background: rgba(black, .75)
+		opacity: 0
+		+transform(translate(0, -20px))
+		+transition(opacity .5s, transform .5s)
+	.rsts-active .rsts-caption
+		opacity: 1
+		+transform(translate(0, 0))
+
 	.rsts-nav-prev, .rsts-nav-next
 		position: absolute
 		left: 20px
@@ -210,6 +225,21 @@
 			text:
 				align: center
 				indent: 0
+
+	.rsts-progress
+		position: absolute
+		right: 0
+		bottom: 0
+		width: 20%
+		height: 10px
+		border: 1px solid white
+		opacity: 0
+		+transition(opacity 0.2s linear)
+		div
+			height: 100%
+			background-color: white
+		&.rsts-progress-active
+			opacity: 1
 
 @include keyframes('shadow-pulse')
 	50%

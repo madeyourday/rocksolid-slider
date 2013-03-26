@@ -28,7 +28,6 @@ Rst.Slide = (function() {
 
 		if (element.tagName.toLowerCase() === 'img') {
 			this.type = 'image';
-			this.data.name = this.data.name || $(element).attr('alt');
 		}
 		this.type = $element.attr('data-rsts-type') || this.type || 'default';
 
@@ -36,6 +35,17 @@ Rst.Slide = (function() {
 			.addClass(slider.options.cssPrefix + 'slide')
 			.addClass(slider.options.cssPrefix + 'slide-' + this.type)
 			.append(element);
+
+		if (this.type === 'image') {
+			this.data.name = this.data.name || this.element.find('img').attr('alt');
+		}
+
+		if (this.data.name) {
+			$(document.createElement('div'))
+				.addClass(slider.options.cssPrefix + 'caption')
+				.text(this.data.name)
+				.appendTo(this.element);
+		}
 
 		this.element.find('img').on('load', function(){
 			slider.resize();
