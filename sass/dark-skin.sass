@@ -26,11 +26,19 @@
 	&.rsts-main
 		position: relative
 		margin: auto
+		background: black
+		+background-image(linear-gradient(top, #222 33%, black 100%))
+		padding: 8px
+			bottom: 0
+		border: 1px solid black
+		+border-radius(3px)
+		+box-shadow(0 0 3px rgba(black, 0.5), inset 0 3px 1px -2px rgba(white, 0.3), inset 3px 0 1px -2px rgba(white, 0.3), inset -3px 0 1px -2px rgba(white, 0.3))
+
+	&.rsts-type-fade .rsts-slide
+		background: #222
 
 	.rsts-view
-		background: #151618
-		+background-image(linear-gradient(top, #333 0%, #151618 100%))
-		+box-shadow(0 0 0 5px #151618, 0 0 4px 4px rgba(black, 0.5))
+		background: #222
 
 	.rsts-slide img
 		width: 100%
@@ -69,19 +77,18 @@
 		background: white
 		+background-image(linear-gradient(top, #333 0%, #151618 100%))
 		+background-clip
-		//opacity: 0
+		opacity: 0
 		+single-transition(opacity, 0.2s, ease-in)
-		+box-shadow(0 0 2px 1px rgba(black, 0.3), inset 0 2px 2px -2px rgba(white, 0.5), inset 2px 0 2px -2px rgba(white, 0.2), inset -2px 0 2px -2px rgba(white, 0.2))
+		+box-shadow(0 0 2px 1px rgba(black, 0.3), inset 0 2px 2px -2px rgba(white, 0.5), inset 2px 0 2px -2px rgba(white, 0.3), inset -2px 0 2px -2px rgba(white, 0.3))
 		&:after
 			content: "\203a"
 			display: block
 			padding:
-				right: 4px
+				right: 3px
 				top: 4px
 			font: normal 24px/1 "Courier New", monospace
 			text-indent: 0
 			color: white
-			//+text-shadow(1px 0 #ccc)
 	.rsts-nav-prev:after
 		content: "\2039"
 		padding:
@@ -95,8 +102,8 @@
 			&:hover
 				opacity: 1
 				+transition-duration(0.05s)
-				//+animation('shadow-pulse 1.5s')
-				//+animation-property('iteration-count', 'infinite')
+			&:active
+				+box-shadow(inset 0 0 2px 1px black)
 		.rsts-video-stop
 			opacity: 1
 
@@ -113,28 +120,27 @@
 				left: -18px
 			&:after
 				content: "\25b2"
-				padding-top: 9px
+				padding: 11px 0 0 2px
 				font-size: 11px
-				color: #555
+				color: white
 		.rsts-nav-next
 			top: auto
 			bottom: 10px
 			&:after
 				content: "\25bc"
-				padding-top: 11px
 
 	.rsts-nav
 		position: relative
-		margin-top: -23px
+		margin-top: 0
 		text-align: center
 		ul
-			display: inline-block
+			display: block
 			margin: 0
 			padding: 0 10px
-			border: 1px solid black
-			+border-radius(3px)
-			background-color: white
-			+background-image(linear-gradient(top, #333 0%, #151618 100%))
+			border-top: 1px solid black
+			background-color: black
+			+background-clip
+			+background-image(linear-gradient(left, black 0%, #222 50%, black 100%))
 			+box-shadow(0 2px 4px -1px rgba(black, 0.25))
 		li
 			display: inline
@@ -147,15 +153,15 @@
 			padding: .2em .3em
 			+border-radius(3px)
 			font-size: .75em
-			color: #333
+			color: black
 			text-decoration: none
-			background-color: white
+			background-color: #555
 			+box-shadow(inset 0 3px 2px -1px rgba(black,.15), inset 0 0 2px rgba(black,.1))
 			&:hover, &.active
 				+text-shadow(0 0 1px white)
 				background-color: #ced0d7
 				+background-image(linear-gradient(top, white 0%, #ced0d7 77%))
-				+box-shadow(0 0 0 1px rgba(0,0,0,.1), 0 2px 2px rgba(0,0,0,.1), inset 0 3px 1px -1px rgba(white,.7), inset 0 -1px 1px rgba(white,.8))
+				+box-shadow(0 0 4px 2px rgba(white,.5), 0 2px 2px rgba(0,0,0,.1), inset 0 3px 1px -1px rgba(white,.7), inset 0 -1px 1px rgba(white,.8))
 
 	.rsts-nav-bullets
 		line-height: 0
@@ -163,15 +169,15 @@
 			display: inline-block
 			margin: 8px 4px
 			width: 20px
-			height: 7px
+			height: 8px
 			overflow: hidden
 			text-indent: -999px
-			background-color: black
-			+box-shadow(inset 0 3px 2px -1px rgba(black,.15), inset 0 0 2px rgba(black,.1))
+			background-color: #555
+			+box-shadow(inset 0 1px 2px -1px black, inset 0 0 2px rgba(black,.1))
 			+background-clip
 			&:hover, &.active
-				background-color: #bd2c2c
-				+box-shadow(0 0 5px 3px rgba(#ff3535,.4), inset 0 0 1px 1px rgba(#e64545,.8))
+				background-color: #e4e4e4
+				+box-shadow(0 0 5px 2px rgba(white,.4), inset 0 0 1px 1px rgba(white,.8))
 
 	.rsts-video-play, .rsts-video-stop
 		position: absolute
@@ -187,6 +193,7 @@
 		+background-image(linear-gradient(top, #333 0%, #151618 100%))
 		+border-radius(5px)
 		+box-shadow(0 0 2px 1px rgba(black, 0.3), inset 0 2px 2px -2px rgba(white, 0.5), inset 2px 0 2px -2px rgba(white, 0.2), inset -2px 0 2px -2px rgba(white, 0.2))
+		opacity: 0.9
 		text:
 			indent: -999px
 			decoration: none
@@ -200,10 +207,11 @@
 			text-indent: 0
 	.rsts-video-play
 		&:hover, &:focus
-			+box-shadow(0 0 5px 5px rgba(#75c9f5, 0), 0 0 1px 2px rgba(#75c9f5, 0.3), inset 0 2px 0 -1px white)
+			+box-shadow(0 0 3px 2px rgba(black, 0.3), inset 0 2px 2px -2px rgba(white, 0.5), inset 2px 0 2px -2px rgba(white, 0.2), inset -2px 0 2px -2px rgba(white, 0.2))
+			opacity: 1
 			+transition-duration(0.05s)
-			+animation('shadow-pulse 1.5s')
-			+animation-property('iteration-count', 'infinite')
+		&:active
+			+box-shadow(inset 0 0 2px 1px black)
 
 	.rsts-video-stop
 		top: 10px
@@ -216,11 +224,12 @@
 		+border-radius(5px)
 		background: black
 		background: rgba(black, 0.8)
+		+box-shadow(none)
 		opacity: 0
 		&:before
 			content: "\d7"
 			top: 8px
-			left: 8px
+			left: 9px
 			width: 16px
 			height: 16px
 			border: 0
@@ -233,7 +242,10 @@
 				align: center
 				indent: 0
 		&:hover,&:focus
+			background: white
 			opacity: 0.7
+			&:before
+				color: black
 
 	&.rsts-video-vimeo .rsts-video-stop
 		left: 10px
@@ -252,8 +264,8 @@
 		div
 			position: relative
 			height: 100%
-			background-color: #770f0f
-			+background-image(linear-gradient(left, rgba(#770f0f, 0) 0%, #eb1e1e 100%))
+			background-color: #4683c2
+			+background-image(linear-gradient(left, rgba(#9394ba, 0) 0%, #3cc8d9 100%))
 			+box-shadow(0 -2px 2px -1px rgba(#3792ce, 0.9), 0 2px 2px -1px rgba(#3792ce, 0.9))
 			&:after, &:before
 				content: ""
@@ -273,7 +285,3 @@
 				+box-shadow(0 0 3px -1px rgba(white, 0.5))
 		&.rsts-progress-active
 			opacity: 0.8
-
-@include keyframes('shadow-pulse')
-	50%
-		+box-shadow(0 0 4px 4px rgba(#75c9f5, 0.3), 0 0 1px 2px rgba(#75c9f5, 0.3), inset 0 2px 0 -1px white)

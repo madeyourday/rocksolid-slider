@@ -63,6 +63,9 @@
 		position: relative
 		margin: auto
 
+	&.rsts-type-fade .rsts-slide
+		background: white
+
 	.rsts-slide img
 		width: 100%
 		height: auto
@@ -74,10 +77,10 @@
 		padding: 5px 10px
 		color: white
 		background: black
-		background: rgba(black, .75)
+		background: rgba(black, 0.75)
 		opacity: 0
 		+transform(translate(0, -20px))
-		+transition(opacity .5s, transform .5s)
+		+transition(opacity 0.5s, transform 0.5s)
 	.rsts-active .rsts-caption
 		opacity: 1
 		+transform(translate(0, 0))
@@ -90,36 +93,35 @@
 		overflow: hidden
 		width: 36px
 		height: 36px
-		margin-top: -34px
-		border: 1px solid #bbb
-		+border-radius(100%)
+		margin-top: -18px
+		+border-radius(5px)
 		line-height: 0
 		text:
 			align: center
 			decoration: none
 			indent: -9999px
-		background: white
-		+background-image(radial-gradient(white 12px, #bbb 22px))
-		+single-transition(opacity, 0.2s, ease-in)
-		+box-shadow(0 0 5px 3px rgba(black, 0), 0 0 1px 2px rgba(black, 0.1), inset 0 2px 0 -1px white)
+		background: black
+		+transition(opacity 0.2s linear)
 		&:after
 			content: "\203a"
 			display: block
-			padding-top: 8px
-			font: bold 16px/1 "Verdana", monospace
+			padding:
+				top: 5px
+				right: 4px
+			font: normal 24px/1 "Courier New", monospace
 			text-indent: 0
-			color: #555
+			color: white
 	.rsts-nav-prev:after
 		content: "\2039"
+		padding:
+			right: 0
+			left: 4px
 
 	&:hover
 		.rsts-nav-prev, .rsts-nav-next
 			opacity: 0.4
 			&:hover
-				opacity: 1
-				+transition-duration(0.05s)
-				+animation('shadow-pulse 1s')
-				+animation-property('iteration-count', 'infinite')
+				opacity: 0.8
 
 	.rsts-nav-next
 		left: auto
@@ -129,19 +131,18 @@
 		.rsts-nav-prev, .rsts-nav-next
 			left: 50%
 			top: 10px
-			margin-top: 0
-			margin-left: -18px
+			margin:
+				top: 0
+				left: -18px
 			&:after
 				content: "\25b2"
-				padding-top: 9px
+				padding: 12px 0 0
 				font-size: 11px
-				color: #555
 		.rsts-nav-next
 			top: auto
-			bottom: 42px
+			bottom: 10px
 			&:after
 				content: "\25bc"
-				padding-top: 11px
 
 	.rsts-nav
 		display: block
@@ -155,11 +156,16 @@
 	.rsts-nav-numbers, .rsts-nav-tabs
 		a
 			display: inline-block
-			padding: .5em
+			min-width: 20px
+			padding: 0.2em 0.3em
+			margin: 5px 2px
+			font-size: 0.75em
 			color: white
 			text-decoration: none
+			background: #333
+			+border-radius(3px)
 			&:hover, &.active
-				background: #333
+				background: #555
 
 	.rsts-nav-bullets
 		line-height: 0
@@ -188,7 +194,7 @@
 			indent: -999px
 			decoration: none
 		background: black
-		background: rgba(black, .8)
+		background: rgba(black, 0.8)
 		&:before
 			content: "\25ba"
 			position: absolute
@@ -200,8 +206,8 @@
 			text-indent: 0
 		&:hover, &:focus
 			background: white
-			background: rgba(white, .8)
-			+box-shadow(0 0 10px rgba(black, .3))
+			background: rgba(white, 0.8)
+			+box-shadow(0 0 5px 1px rgba(black, 0.2))
 			&:before
 				color: #000
 
@@ -210,12 +216,11 @@
 		left: auto
 		right: 10px
 		margin: 0
-		+border-radius(5px)
 		width: 32px
 		height: 32px
 		&:before
 			content: "\d7"
-			top: 8px
+			top: 7px
 			left: 8px
 			width: 16px
 			height: 16px
@@ -229,10 +234,14 @@
 				align: center
 				indent: 0
 
+	&.rsts-video-vimeo .rsts-video-stop
+		left: 10px
+		right: auto
+
 	.rsts-progress
 		position: absolute
 		right: 0
-		top: 0
+		bottom: 0
 		width: 100%
 		height: 3px
 		opacity: 0
@@ -244,6 +253,5 @@
 		&.rsts-progress-active
 			opacity: 0.3
 
-@include keyframes('shadow-pulse')
-	50%
-		+box-shadow(0 0 5px 3px rgba(black, 0.2), 0 0 1px 2px rgba(black, 0.1), inset 0 2px 0 -1px white)
+@import "light-skin"
+@import "dark-skin"

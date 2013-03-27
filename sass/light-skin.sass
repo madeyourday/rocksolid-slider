@@ -27,6 +27,9 @@
 		position: relative
 		margin: auto
 
+	&.rsts-type-fade .rsts-slide
+		background: white
+
 	.rsts-view
 		background: white
 		+box-shadow(0 0 0 6px white, 0 0 4px 5px rgba(black, 0.5))
@@ -58,18 +61,17 @@
 		height: 36px
 		overflow: hidden
 		margin-top: -18px
-		border: 1px solid #ccc
-		+border-radius(100%)
+		+border-radius(5px)
 		line-height: 0
 		text:
 			align: center
 			decoration: none
 			indent: -9999px
 		background: white
-		+background-image(radial-gradient(white 12px, #bbb 22px))
-		opacity: 0
+		+background-image(linear-gradient(top, #eee, white 25%, white 60%, #eee))
+		//opacity: 0
 		+single-transition(opacity, 0.2s, ease-in)
-		+box-shadow(0 0 4px 4px rgba(#75c9f5, 0), 0 0 1px 2px rgba(#75c9f5, 0), inset 0 2px 0 -1px white)
+		+box-shadow(0 0 0 1px #ccc, 0 0 4px 4px rgba(#75c9f5, 0), 0 0 1px 2px rgba(#75c9f5, 0), inset 0 2px 0 -1px white, inset 0 2px 3px -1px rgba(black, 0.2))
 		&:after
 			content: "\203a"
 			display: block
@@ -79,7 +81,6 @@
 			font: normal 24px/1 "Courier New", monospace
 			text-indent: 0
 			color: #444
-			+text-shadow(1px 0 #ccc)
 	.rsts-nav-prev:after
 		content: "\2039"
 		padding:
@@ -111,15 +112,15 @@
 				left: -18px
 			&:after
 				content: "\25b2"
-				padding-top: 9px
+				padding: 11px 0 0 2px
 				font-size: 11px
 				color: #555
 		.rsts-nav-next
 			top: auto
-			bottom: 10px
+			bottom: 23px
 			&:after
 				content: "\25bc"
-				padding-top: 11px
+				padding-top: 13px
 
 	.rsts-nav
 		position: relative
@@ -195,7 +196,7 @@
 			left: 16px
 			top: 11px
 			font-size: 36px
-			color: #888
+			color: #444
 			text-indent: 0
 	.rsts-video-play
 		&:hover, &:focus
