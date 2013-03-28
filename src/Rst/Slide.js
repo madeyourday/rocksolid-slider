@@ -213,7 +213,7 @@ Rst.Slide = (function() {
 	/**
 	 * stop video
 	 */
-	Slide.prototype.stopVideo = function() {
+	Slide.prototype.stopVideo = function(fromApi, fromButton) {
 
 		if (this.eventNamespace) {
 			$(window).off('message.' + this.eventNamespace);
@@ -241,6 +241,14 @@ Rst.Slide = (function() {
 			});
 		}
 
+		if (fromApi && this.slider.options.autoplayRestart) {
+			this.slider.autoplay(200);
+		}
+		else if(fromButton) {
+			// restart permanently stopped autoplay
+			this.slider.stopAutoplay();
+		}
+
 	};
 
 	/**
@@ -251,17 +259,15 @@ Rst.Slide = (function() {
 		var self = this;
 		var videoId, apiCallback;
 
+		this.slider.stopAutoplay(true);
+
 		if (this.data.video.substr(0, 31) === 'http://www.youtube.com/watch?v=') {
+
+			this.element.addClass(this.slider.options.cssPrefix + 'video-youtube');
 
 			videoId = this.data.video.substr(31, 11);
 			this.videoElement = $(document.createElement('iframe'))
-				.css({
-					width: '100%',
-					height: '100%',
-					position: 'absolute',
-					top: 0,
-					left: 0
-				})
+				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
 					'http://www.youtube.com/embed/' +
 					videoId +
@@ -277,7 +283,7 @@ Rst.Slide = (function() {
 						events: {
 							onStateChange: function(event) {
 								if (event.data === YT.PlayerState.ENDED) {
-									self.stopVideo();
+									self.stopVideo(true);
 								}
 							}
 						}
@@ -301,16 +307,11 @@ Rst.Slide = (function() {
 		}
 		else if (this.data.video.substr(0, 17) === 'http://vimeo.com/') {
 
-			videoId = this.data.video.substr(17);
+			this.element.addClass(this.slider.options.cssPrefix + 'video-vimeo');
 
+			videoId = this.data.video.substr(17);
 			this.videoElement = $(document.createElement('iframe'))
-				.css({
-					width: '100%',
-					height: '100%',
-					position: 'absolute',
-					top: 0,
-					left: 0
-				})
+				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
 					'http://player.vimeo.com/video/' +
 					videoId +
@@ -331,7 +332,7 @@ Rst.Slide = (function() {
 						);
 					}
 					else if (data.event === 'finish') {
-						self.stopVideo();
+						self.stopVideo(true);
 					}
 				}
 			});
@@ -360,13 +361,18 @@ Rst.Slide = (function() {
 			this.slider.css3Supported = true;
 		}
 
+		// iPad needs a close button outside of the video
+		if (this.slider.device === 'iPad') {
+			this.element.addClass(this.slider.options.cssPrefix + 'video-ipad');
+		}
+
 		this.videoStopButton = $(document.createElement('a'))
 			.attr('href', this.data.video)
 			.text('stop')
 			.addClass(this.slider.options.cssPrefix + 'video-stop')
 			.on('click', function(event) {
 				event.preventDefault();
-				self.stopVideo();
+				self.stopVideo(false, true);
 			})
 			.appendTo(this.element);
 

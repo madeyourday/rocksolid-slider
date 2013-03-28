@@ -125,6 +125,15 @@ Rst.Slider = (function() {
 
 		this.autoplay();
 
+		if (this.options.pauseAutoplayOnHover) {
+			this.elements.view.on('mouseenter', function() {
+				self.pauseAutoplay();
+			});
+			this.elements.view.on('mouseleave', function() {
+				self.playAutoplay();
+			});
+		}
+
 	}
 
 	/**
@@ -159,7 +168,9 @@ Rst.Slider = (function() {
 		// (must be bigger than autoplay)
 		autoplayRestart: false,
 		// displays a progress bar
-		autoplayProgress: true,
+		autoplayProgress: false,
+		// true to pause the autoplay on hover
+		pauseAutoplayOnHover: false,
 		// navigation type (bullets, numbers, tabs)
 		navType: 'bullets',
 		// image scale mode (fit, crop, scale)
@@ -173,7 +184,7 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.goTo = function(index, fromDrag, fromAutoplay) {
 
-		if (!fromAutoplay) {
+		if (! fromAutoplay) {
 			this.stopAutoplay();
 		}
 
@@ -209,8 +220,6 @@ Rst.Slider = (function() {
 			this.preloadSlides(index);
 		}
 
-		this.nav.setActive(index);
-
 		var size = this.getViewSize(index);
 		var durationScale;
 
@@ -245,18 +254,20 @@ Rst.Slider = (function() {
 	/**
 	 * stops/restarts autoplay
 	 */
-	Slider.prototype.stopAutoplay = function() {
+	Slider.prototype.stopAutoplay = function(noRestart) {
 
 		var self = this;
 
 		clearTimeout(this.autoplayTimeout);
 		clearInterval(this.autoplayInterval);
 
+		this.autoplayStopped = true;
+
 		if (this.options.autoplay && this.options.autoplayProgress) {
 			this.elements.progress.removeClass(this.options.cssPrefix + 'progress-active');
 		}
 
-		if (this.options.autoplayRestart) {
+		if (this.options.autoplayRestart && !noRestart) {
 			this.autoplayTimeout = setTimeout(function() {
 				self.autoplay();
 			}, this.options.autoplayRestart - this.options.autoplay);
@@ -265,9 +276,56 @@ Rst.Slider = (function() {
 	};
 
 	/**
+	 * pause autoplay and autoplay progress bar
+	 */
+	Slider.prototype.pauseAutoplay = function() {
+
+		if (! this.options.autoplay || this.autoplayPaused || this.isTouch) {
+			return;
+		}
+
+		if (! this.autoplayStopped) {
+			clearTimeout(this.autoplayTimeout);
+			clearInterval(this.autoplayInterval);
+		}
+
+		this.autoplayPaused = true;
+
+		if (
+			this.options.autoplay &&
+			this.options.autoplayProgress &&
+			! this.autoplayStopped
+		) {
+			this.pauseAutoplayProgressBar();
+		}
+
+	};
+
+	/**
+	 * play paused autoplay
+	 */
+	Slider.prototype.playAutoplay = function() {
+
+		if (! this.options.autoplay || ! this.autoplayPaused) {
+			return;
+		}
+
+		this.autoplayPaused = false;
+		if (! this.autoplayStopped) {
+			this.autoplay((
+				1 - (
+					this.elements.progressBar.outerWidth() /
+					this.elements.progress.width()
+				)
+			) * this.options.autoplay);
+		}
+
+	};
+
+	/**
 	 * starts autoplay
 	 */
-	Slider.prototype.autoplay = function() {
+	Slider.prototype.autoplay = function(duration) {
 
 		var self = this;
 
@@ -275,7 +333,20 @@ Rst.Slider = (function() {
 			return;
 		}
 
-		this.startAutoplayProgressBar(this.options.autoplay - this.options.duration);
+		clearTimeout(this.autoplayTimeout);
+		clearInterval(this.autoplayInterval);
+
+		this.autoplayStopped = false;
+
+		if (this.autoplayPaused) {
+			this.pauseAutoplayProgressBar(0);
+			return;
+		}
+
+		duration = (duration || duration === 0) ? duration :
+			(this.options.autoplay - this.options.duration);
+
+		this.startAutoplayProgressBar(duration);
 
 		var intervalFunction = function() {
 			var index = self.slideIndex + 1;
@@ -289,7 +360,7 @@ Rst.Slider = (function() {
 		this.autoplayTimeout = setTimeout(function() {
 			intervalFunction();
 			self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
-		}, this.options.autoplay - this.options.duration);
+		}, duration);
 
 	};
 
@@ -299,8 +370,12 @@ Rst.Slider = (function() {
 			return;
 		}
 
+		duration = duration || this.options.autoplay;
+
 		this.elements.progress.addClass(this.options.cssPrefix + 'progress-active');
-		this.modify(this.elements.progressBar, {width: 0});
+		this.modify(this.elements.progressBar, {
+			width: (1 - (duration / this.options.autoplay)) * 100 + '%'
+		});
 
 		// get the css value to ensure the engine applies the width
 		this.elements.progressBar.css('width');
@@ -312,9 +387,24 @@ Rst.Slider = (function() {
 			null,
 			null,
 			null,
-			duration ? duration : this.options.autoplay,
+			duration,
 			'linear'
 		);
+
+	};
+
+	Slider.prototype.pauseAutoplayProgressBar = function(position) {
+
+		if (! this.options.autoplayProgress) {
+			return;
+		}
+
+		if (!position && position !== 0) {
+			position = this.elements.progressBar.outerWidth() / this.elements.progress.width();
+		}
+
+		this.elements.progress.addClass(this.options.cssPrefix + 'progress-active');
+		this.modify(this.elements.progressBar, {width: position * 100 + '%'});
 
 	};
 
@@ -330,6 +420,7 @@ Rst.Slider = (function() {
 
 		// currently only detecting mozilla is needed
 		this.engine = 'mozInnerScreenX' in window ? 'moz' : 'unknown';
+		this.device = navigator.platform;
 
 		var el = document.createElement('div');
 		document.body.appendChild(el);
@@ -428,7 +519,8 @@ Rst.Slider = (function() {
 		}
 		else if (animate) {
 			element.animate(css, {
-				duration: this.options.duration * durationScale,
+				duration: duration ? duration :
+					this.options.duration * durationScale,
 				easing: timingFunction ? timingFunction :
 					fromDrag ? 'easeOutSine' : 'easeInOutSine',
 				complete: element === this.elements.slides ? function() {
@@ -578,6 +670,7 @@ Rst.Slider = (function() {
 			}
 		});
 
+		this.nav.setActive(this.slideIndex);
 		this.slides[this.slideIndex].setState('active');
 
 		if (this.preloadOnCleanup) {
@@ -682,27 +775,32 @@ Rst.Slider = (function() {
 		var eventNames = {
 			start: 'mousedown',
 			stop: 'mouseup',
-			move: 'mousemove',
-			cancel: 'mouseup'
+			move: 'mousemove'
 		};
 
 		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
 			eventNames = {
 				start: 'MSPointerDown',
 				stop: 'MSPointerUp',
-				move: 'MSPointerMove',
-				cancel: 'MSPointerUp'
+				move: 'MSPointerMove'
 			};
 			this.elements.crop.css('-ms-touch-action', 'pan-' + (this.options.direction === 'x' ? 'y' : 'x') + ' pinch-zoom double-tap-zoom');
+			this.elements.main.on('MSPointerDown', function(event) {
+				if (event.originalEvent.pointerType === event.MSPOINTER_TYPE_TOUCH) {
+					self.isTouch = true;
+				}
+			});
 		}
 		else if ('ontouchstart' in window || 'ontouchend' in document) {
 			// set mouse and touch events for devices supporting both types
 			eventNames = {
 				start: eventNames.start + ' touchstart',
-				stop: eventNames.stop + ' touchend',
-				move: eventNames.move + ' touchmove',
-				cancel: eventNames.cancel + ' touchcancel'
+				stop: eventNames.stop + ' touchend touchcancel',
+				move: eventNames.move + ' touchmove'
 			};
+			this.elements.main.on('touchstart', function(event) {
+				self.isTouch = true;
+			});
 		}
 
 		this.elements.crop.on(eventNames.start, function(event) {
@@ -713,9 +811,6 @@ Rst.Slider = (function() {
 		});
 		$(document).on(eventNames.move + '.rsts', function(event) {
 			return self.onDragMove(event);
-		});
-		$(document).on(eventNames.cancel + '.rsts', function(event) {
-			return self.onDragStop(event);
 		});
 
 	};

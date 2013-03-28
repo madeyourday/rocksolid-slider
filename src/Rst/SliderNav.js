@@ -99,10 +99,16 @@ Rst.SliderNav = (function() {
 	 * @return object {x: ..., y: ...}
 	 */
 	SliderNav.prototype.getSize = function() {
+
+		if (this.elements.main.css('position') === 'absolute') {
+			return {x: 0, y: 0};
+		}
+
 		return {
 			x: this.elements.main.outerWidth(true),
 			y: this.elements.main.outerHeight(true)
 		};
+
 	};
 
 	return SliderNav;

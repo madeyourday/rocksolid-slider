@@ -41,6 +41,13 @@
 .rsts-slide img
 	display: block
 
+.rsts-video-iframe
+	position: absolute
+	top: 0
+	left: 0
+	width: 100%
+	height: 100%
+
 .rsts-type-slide
 
 	.rsts-view
@@ -233,9 +240,17 @@
 				align: center
 				indent: 0
 
-	&.rsts-video-vimeo .rsts-video-stop
+	.rsts-video-vimeo > .rsts-video-stop
 		left: 10px
 		right: auto
+
+	.rsts-video-ipad
+		> .rsts-video-iframe
+			padding-top: 32px
+		> .rsts-video-stop
+			left: auto
+			right: 0
+			top: 0
 
 	.rsts-progress
 		position: absolute
