@@ -506,9 +506,11 @@ Rst.Slider = (function() {
 		var width, height;
 		if (this.options.width !== 'auto') {
 			width = this.elements.main.width();
+			width -= this.elements.view.outerWidth(true) - this.elements.view.width();
 		}
 		if (this.options.height !== 'auto') {
 			height = this.elements.main.height();
+			height -= this.elements.view.outerHeight(true) - this.elements.view.height();
 			height -= this.nav.getSize().y;
 		}
 
@@ -597,9 +599,11 @@ Rst.Slider = (function() {
 
 		if (this.options.width !== 'auto') {
 			x = this.elements.main.width();
+			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
 		}
 		if (this.options.height !== 'auto') {
 			y = this.elements.main.height();
+			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
 			y -= this.nav.getSize().y;
 		}
 
@@ -682,8 +686,6 @@ Rst.Slider = (function() {
 			cancel: 'mouseup'
 		};
 
-		this.hasTouch = false;
-
 		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
 			eventNames = {
 				start: 'MSPointerDown',
@@ -691,16 +693,16 @@ Rst.Slider = (function() {
 				move: 'MSPointerMove',
 				cancel: 'MSPointerUp'
 			};
-			this.hasTouch = true;
+			this.elements.crop.css('-ms-touch-action', 'pan-' + (this.options.direction === 'x' ? 'y' : 'x') + ' pinch-zoom double-tap-zoom');
 		}
 		else if ('ontouchstart' in window || 'ontouchend' in document) {
+			// set mouse and touch events for devices supporting both types
 			eventNames = {
-				start: 'touchstart',
-				stop: 'touchend',
-				move: 'touchmove',
-				cancel: 'touchcancel'
+				start: eventNames.start + ' touchstart',
+				stop: eventNames.stop + ' touchend',
+				move: eventNames.move + ' touchmove',
+				cancel: eventNames.cancel + ' touchcancel'
 			};
-			this.hasTouch = true;
 		}
 
 		this.elements.crop.on(eventNames.start, function(event) {
@@ -723,20 +725,28 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.onDragStart = function(event) {
 
-		if ($(event.target).closest(
-			'.no-drag,a,button,input,select,textarea',
-			this.elements.slides
-		).length) {
+		if (
+			this.isDragging ||
+			(event.type === 'mousedown' && event.which !== 1) ||
+			$(event.target).closest(
+				'.no-drag,a,button,input,select,textarea',
+				this.elements.slides
+			).length
+		) {
 			return;
 		}
 
-		if (event.type === 'mousedown' && event.which !== 1) {
-			return;
+		// detect mouse or touch event
+		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
+			this.isTouch = event.originalEvent.pointerType === event.MSPOINTER_TYPE_TOUCH;
+		}
+		else {
+			this.isTouch = event.type !== 'mousedown';
 		}
 
 		var pos = this.getPositionFromEvent(event);
 
-		if (! this.hasTouch) {
+		if (! this.isTouch) {
 			event.preventDefault();
 			this.stopAutoplay();
 		}
@@ -746,7 +756,7 @@ Rst.Slider = (function() {
 		this.isDragging = true;
 		this.dragStartPos = {
 			x: pos.x - this.elements.slides.offset().left + this.elements.crop.offset().left,
-			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().left
+			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().top
 		};
 		this.dragLastPos = this.dragStartPos[this.options.direction];
 		this.dragLastDiff = 0;
@@ -795,14 +805,16 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.onDragMove = function(event) {
 
-		if (! this.isDragging) {
+		if (! this.isDragging || (
+			this.isTouch && event.type === 'mousemove'
+		)) {
 			return;
 		}
 
 		var pos = this.getPositionFromEvent(event);
 		var diffAxis;
 
-		if (this.hasTouch) {
+		if (this.isTouch) {
 
 			if (! this.touchAxis) {
 				diffAxis =
