@@ -81,11 +81,6 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.size = function(x, y, ret) {
 
-		if (x === true) {
-			x = null;
-			ret = true;
-		}
-
 		if (x && ! y) {
 			this.slider.modify(this.element, {width: x});
 			if (ret) {

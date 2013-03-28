@@ -18,7 +18,6 @@ Rst.Slider = (function() {
 	function Slider(element, options) {
 
 		var self = this;
-		var size;
 
 		this.slides = [];
 		this.elements = {};
@@ -27,10 +26,7 @@ Rst.Slider = (function() {
 		this.elements.main = element;
 		this.options = $.extend({}, this.defaultOptions, options);
 
-		if (this.options.width === 'auto' && this.options.direction === 'x') {
-			throw new Error('width "auto" with direction "x" ist not possible');
-		}
-		else if (this.options.height === 'auto' && this.options.direction === 'y') {
+		if (this.options.height === 'auto' && this.options.direction === 'y') {
 			throw new Error('height "auto" with direction "y" ist not possible');
 		}
 
@@ -65,10 +61,25 @@ Rst.Slider = (function() {
 			this.options.width = 'auto';
 		}
 
-		if (this.options.width !== 'css') {
-			this.elements.main.css({width: this.options.width});
+		var proportion = this.options.width.match(/([0-9.]+)[^0-9.]*x[^0-9.]*([0-9.]+)/i);
+		if (proportion) {
+			this.proportion = proportion[1] / proportion[2];
+			delete this.options.width;
 		}
-		if (this.options.height !== 'css') {
+		proportion = this.options.height.match(/([0-9.]+)[^0-9.]*x[^0-9.]*([0-9.]+)/i);
+		if (proportion) {
+			this.proportion = proportion[1] / proportion[2];
+			delete this.options.height;
+		}
+
+		if (this.options.width && this.options.width !== 'css') {
+			this.elements.main.css({width: this.options.width});
+			// auto sizing of width is currently not supported
+			if (this.options.width === 'auto') {
+				this.options.width = 'css';
+			}
+		}
+		if (this.options.height && this.options.height !== 'css') {
 			this.elements.main.css({height: this.options.height});
 		}
 
@@ -78,6 +89,9 @@ Rst.Slider = (function() {
 
 		this.elements.crop = $(document.createElement('div'))
 			.addClass(this.options.cssPrefix + 'crop')
+			.on('scroll', function() {
+				$(this).scrollLeft(0).scrollTop(0);
+			})
 			.appendTo(this.elements.view);
 
 		this.elements.slides = $(document.createElement('div'))
@@ -96,7 +110,7 @@ Rst.Slider = (function() {
 		this.nav.setActive(this.slideIndex);
 
 		this.preloadSlides(0);
-		size = this.getViewSize();
+		var size = this.getViewSize();
 		$(window).on('resize.rsts', function(){
 			self.resize();
 		});
@@ -150,13 +164,18 @@ Rst.Slider = (function() {
 		cssPrefix: 'rsts-',
 		// slider skin (set this to "none" to disable the default skin)
 		skin: 'default',
-		// "auto", a css lenght value or "css" to get the size from the css
+		// set width and height to one of the following values
+		// - "css": get the size from the applied css (default)
+		// - a css lenght value: e.g. "100%", "500px", "50em"
+		// - "auto": get the size from the active slide dimensions at runtime
+		//   height can be set to auto only if the direction is "x"
+		// - a proportion: keep a fixed proportion for the slides, e.g. "480x270"
+		//   this must not set to both dimensions
 		width: 'css',
-		// "auto", a css lenght value or "css" to get the size from the css
 		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 3,
-		// gap between the slides
+		// gap between the slides in pixels
 		gapSize: 20,
 		// duration of the slide animation in milliseconds
 		duration: 400,
@@ -595,16 +614,7 @@ Rst.Slider = (function() {
 		var preloadCount = this.options.type === 'slide' ?
 			this.options.preloadSlides :
 			0;
-		var width, height;
-		if (this.options.width !== 'auto') {
-			width = this.elements.main.width();
-			width -= this.elements.view.outerWidth(true) - this.elements.view.width();
-		}
-		if (this.options.height !== 'auto') {
-			height = this.elements.main.height();
-			height -= this.elements.view.outerHeight(true) - this.elements.view.height();
-			height -= this.nav.getSize().y;
-		}
+		var size = this.getViewSizeFixed();
 
 		$.each(this.slides, function(i, slide) {
 			if (i >= slideIndex - preloadCount && i <= slideIndex + preloadCount) {
@@ -615,13 +625,13 @@ Rst.Slider = (function() {
 					else if (self.options.type === 'slide') {
 						self.modify(slide.element, {
 							offset: i * (
-								(self.options.direction === 'x' ? width : height) +
+								(self.options.direction === 'x' ? size.x : size.y) +
 								self.options.gapSize
 							)
 						});
 					}
 					self.elements.slides.append(slide.element);
-					slide.size(width, height);
+					slide.size(size.x, size.y);
 				}
 				else if (
 					self.options.type === 'fade' &&
@@ -680,6 +690,40 @@ Rst.Slider = (function() {
 
 	};
 
+	/**
+	 * returns an object containing view width and height fixed values
+	 * @return object {x: ..., y: ...}
+	 */
+	Slider.prototype.getViewSizeFixed = function() {
+
+		var x, y;
+
+		if (this.options.width !== 'auto') {
+			x = this.elements.main.width();
+			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
+			if (x < 10) {
+				x = 10;
+			}
+		}
+		if (this.options.height !== 'auto') {
+			y = this.elements.main.height();
+			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
+			y -= this.nav.getSize().y;
+			if (y < 10) {
+				y = 10;
+			}
+		}
+
+		if (! this.options.width && this.proportion) {
+			x = y * this.proportion;
+		}
+		if (! this.options.height && this.proportion) {
+			y = x / this.proportion;
+		}
+
+		return {x: x, y: y};
+
+	};
 
 	/**
 	 * returns an object containing view width and height
@@ -687,27 +731,20 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getViewSize = function(slideIndex) {
 
-		var x, y, size;
+		var size;
 		slideIndex = slideIndex || 0;
 
-		if (this.options.width !== 'auto') {
-			x = this.elements.main.width();
-			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
-		}
-		if (this.options.height !== 'auto') {
-			y = this.elements.main.height();
-			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
-			y -= this.nav.getSize().y;
-		}
+		size = this.getViewSizeFixed();
 
-		if (x && y) {
-			size = {
-				x: x,
-				y: y
-			};
-		}
-		else {
-			size = this.slides[slideIndex].size(x, y, true);
+		if (! size.x || ! size.y) {
+			// calculate the missing dimension
+			size = this.slides[slideIndex].size(size.x, size.y, true);
+			if (size.x < 10) {
+				size.x = 10;
+			}
+			if (size.y < 10) {
+				size.y = 10;
+			}
 		}
 
 		this.slideSize = size[this.options.direction];
