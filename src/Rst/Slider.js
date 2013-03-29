@@ -21,7 +21,6 @@ Rst.Slider = (function() {
 
 		this.slides = [];
 		this.elements = {};
-		this.slideIndex = 0;
 
 		this.elements.main = element;
 		this.options = $.extend({}, this.defaultOptions, options);
@@ -38,7 +37,19 @@ Rst.Slider = (function() {
 				return Math.random() - 0.5;
 			});
 		}
-		this.slides[0].setState('active');
+
+		this.slideIndex = this.getIndexFromUrl();
+		if (this.slideIndex === false) {
+			this.slideIndex = 0;
+		}
+		$(window).on('hashchange.rsts', function(){
+			var index = self.getIndexFromUrl();
+			if (index !== false && index !== self.slideIndex) {
+				self.goTo(index);
+			}
+		});
+
+		this.slides[this.slideIndex].setState('active');
 
 		this.elements.main
 			.addClass(this.options.cssPrefix + 'main')
@@ -109,8 +120,7 @@ Rst.Slider = (function() {
 		this.nav = new Rst.SliderNav(this);
 		this.nav.setActive(this.slideIndex);
 
-		this.preloadSlides(0);
-		var size = this.getViewSize();
+		this.preloadSlides(this.slideIndex);
 		$(window).on('resize.rsts', function(){
 			self.resize();
 		});
@@ -194,7 +204,9 @@ Rst.Slider = (function() {
 		navType: 'bullets',
 		// image scale mode (fit, crop, scale)
 		// only works if width and height are not set to "auto"
-		scaleMode: 'fit'
+		scaleMode: 'fit',
+		// URL hash prefix or false to disable deep linking, e.g. "slider-"
+		deepLinkPrefix: false
 	};
 
 	/**
@@ -267,6 +279,32 @@ Rst.Slider = (function() {
 				height: size.y
 			}, true, durationScale, fromDrag);
 		}
+
+	};
+
+	/**
+	 * returns deep link index from URL hash
+	 */
+	Slider.prototype.getIndexFromUrl = function() {
+
+		if (! this.options.deepLinkPrefix) {
+			return false;
+		}
+
+		var hashPrefix = '#' + this.options.deepLinkPrefix;
+		if (window.location.hash.substr(0, hashPrefix.length) === hashPrefix) {
+			var hashIndex = Math.abs(
+				parseInt(window.location.hash.substr(hashPrefix.length), 10)
+			);
+			if (hashIndex) {
+				if (hashIndex > this.slides.length) {
+					hashIndex = this.slides.length;
+				}
+				return hashIndex - 1;
+			}
+		}
+
+		return 0;
 
 	};
 
@@ -682,6 +720,30 @@ Rst.Slider = (function() {
 
 		this.nav.setActive(this.slideIndex);
 		this.slides[this.slideIndex].setState('active');
+
+		if (this.options.deepLinkPrefix && this.getIndexFromUrl() !== this.slideIndex) {
+			if (this.slideIndex) {
+				window.location.hash = '#' + this.options.deepLinkPrefix + (this.slideIndex + 1);
+			}
+			else {
+				if (window.history && window.history.pushState) {
+					window.history.pushState(
+						'',
+						document.title,
+						window.location.pathname + window.location.search
+					);
+				}
+				else {
+					var scroll = {
+						x: $(window).scrollLeft(),
+						y: $(window).scrollTop()
+					};
+					window.location.hash = '';
+					$(window).scrollLeft(scroll.x);
+					$(window).scrollTop(scroll.y);
+				}
+			}
+		}
 
 		if (this.preloadOnCleanup) {
 			this.preloadOnCleanup = false;
