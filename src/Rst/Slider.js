@@ -158,6 +158,19 @@ Rst.Slider = (function() {
 			});
 		}
 
+		if (this.options.keyboard) {
+			$(document.body).on('keydown.rsts', function(event){
+				var codePrev = self.options.direction === 'x' ? 37 : 38;
+				var codeNext = self.options.direction === 'x' ? 39 : 40;
+				if ((event.which === codePrev || event.which === codeNext) && (
+					event.target === document.body ||
+					$(event.target).closest(self.elements.main).length
+				)) {
+					self.goTo(self.slideIndex + (event.which === codePrev ? -1 : 1));
+				}
+			});
+		}
+
 	}
 
 	/**
@@ -206,7 +219,9 @@ Rst.Slider = (function() {
 		// only works if width and height are not set to "auto"
 		scaleMode: 'fit',
 		// URL hash prefix or false to disable deep linking, e.g. "slider-"
-		deepLinkPrefix: false
+		deepLinkPrefix: false,
+		// true to enable keyboard arrow navigation
+		keyboard: true
 	};
 
 	/**
