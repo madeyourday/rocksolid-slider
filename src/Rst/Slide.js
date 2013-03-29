@@ -236,6 +236,10 @@ Rst.Slide = (function() {
 			});
 		}
 
+		this.slider.elements.main.removeClass(
+			this.slider.options.cssPrefix + 'video-playing'
+		);
+
 		if (fromApi && this.slider.options.autoplayRestart) {
 			this.slider.autoplay(200);
 		}
@@ -370,6 +374,10 @@ Rst.Slide = (function() {
 				self.stopVideo(false, true);
 			})
 			.appendTo(this.element);
+
+		this.slider.elements.main.addClass(
+			this.slider.options.cssPrefix + 'video-playing'
+		);
 
 	};
 
