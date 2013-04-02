@@ -29,6 +29,7 @@ module.exports = function(grunt) {
 					config: 'sass/config.rb',
 					sassDir: 'sass',
 					cssDir: 'css',
+					imagesDir: 'img',
 					'output-style': 'expanded',
 					'no-line-comments': true
 				}

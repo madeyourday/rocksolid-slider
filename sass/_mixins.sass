@@ -5,19 +5,19 @@
  * file that was distributed with this source code.
  */
 
-@mixin animation($value)
+=animation($value)
 	-webkit-animation: unquote($value)
 	-moz-animation: unquote($value)
 	-o-animation: unquote($value)
 	animation: unquote($value)
 
-@mixin animation-property($property, $value)
+=animation-property($property, $value)
 	-webkit-animation-#{$property}: unquote($value)
 	-moz-animation-#{$property}: unquote($value)
 	-o-animation-#{$property}: unquote($value)
 	animation-#{$property}: unquote($value)
 
-@mixin keyframes($name)
+=keyframes($name)
 	@-webkit-keyframes #{$name}
 		@content
 	@-moz-keyframes #{$name}
@@ -26,3 +26,10 @@
 		@content
 	@keyframes #{$name}
 		@content
+
+=bg-image-hd($image-name, $image-extension:"png")
+	background-image: inline-image("#{$image-name}"+"."+"#{$image-extension}", image/#{$image-extension})
+	// high density displays
+	@media only screen and (-webkit-min-device-pixel-ratio: 1.3), only screen and (min--moz-device-pixel-ratio: 1.3), only screen and (-o-device-pixel-ratio: 4/3), only screen and (min-device-pixel-ratio: 1.3)
+		background-image: inline-image("#{$image-name}"+"-2x."+"#{$image-extension}", "image/"+"#{$image-extension}")
+		background-size: image-width("#{$image-name}"+"."+"#{$image-extension}"), image-height("#{$image-name}"+"."+"#{$image-extension}")
