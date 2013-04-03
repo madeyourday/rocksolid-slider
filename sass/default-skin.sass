@@ -83,6 +83,10 @@
 		.rsts-nav-next
 			+bg-image-hd("default/arrow-bottom")
 
+	&.rsts-video-playing
+		.rsts-nav, .rsts-nav-prev, .rsts-nav-next
+			+opacity(0)
+
 	.rsts-nav
 		position: absolute
 		right: 95px
@@ -94,10 +98,6 @@
 			padding: 0
 		li
 			display: inline
-
-	&.rsts-video-playing
-		.rsts-nav, .rsts-nav-prev, .rsts-nav-next
-			+opacity(0)
 
 	.rsts-nav-numbers, .rsts-nav-tabs
 		a
@@ -162,21 +162,17 @@
 		border: none
 		+border-radius(5px)
 		+bg-image-hd("default/play")
-
 	.rsts-video-stop
 		top: 20px
 		right: 20px
 		left: auto
 		+bg-image-hd("default/close")
-
 	.rsts-video-youtube > .rsts-video-stop
 		top: 25px
-
 	.rsts-video-vimeo > .rsts-video-stop
 		top: 10px
 		right: auto
 		left: 10px
-
 	.rsts-video-ipad
 		> .rsts-video-iframe
 			padding-top: 32px
