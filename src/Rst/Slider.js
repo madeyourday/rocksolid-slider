@@ -880,11 +880,35 @@ Rst.Slider = (function() {
 	};
 
 	/**
+	 * set isTouch and add or remove the classes rsts-touch and rsts-no-touch
+	 */
+	Slider.prototype.setTouch = function(isTouch) {
+
+		if (isTouch !== this.isTouch) {
+			if (isTouch) {
+				this.elements.main
+					.addClass(this.options.cssPrefix + 'touch')
+					.removeClass(this.options.cssPrefix + 'no-touch');
+			}
+			else {
+				this.elements.main
+					.addClass(this.options.cssPrefix + 'no-touch')
+					.removeClass(this.options.cssPrefix + 'touch');
+			}
+		}
+
+		this.isTouch = isTouch;
+
+	};
+
+	/**
 	 * detects mouse or touch events and adds the event handlers
 	 */
 	Slider.prototype.setDragEvents = function() {
 
 		var self = this;
+
+		this.setTouch(false);
 
 		var eventNames = {
 			start: 'mousedown',
@@ -900,8 +924,8 @@ Rst.Slider = (function() {
 			};
 			this.elements.crop.css('-ms-touch-action', 'pan-' + (this.options.direction === 'x' ? 'y' : 'x') + ' pinch-zoom double-tap-zoom');
 			this.elements.main.on('MSPointerDown', function(event) {
-				if (event.originalEvent.pointerType === event.MSPOINTER_TYPE_TOUCH) {
-					self.isTouch = true;
+				if (event.originalEvent.pointerType === event.originalEvent.MSPOINTER_TYPE_TOUCH) {
+					self.setTouch(true);
 				}
 			});
 		}
@@ -913,7 +937,7 @@ Rst.Slider = (function() {
 				move: eventNames.move + ' touchmove'
 			};
 			this.elements.main.on('touchstart', function(event) {
-				self.isTouch = true;
+				self.setTouch(true);
 			});
 		}
 
@@ -947,10 +971,10 @@ Rst.Slider = (function() {
 
 		// detect mouse or touch event
 		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
-			this.isTouch = event.originalEvent.pointerType === event.MSPOINTER_TYPE_TOUCH;
+			this.setTouch(event.originalEvent.pointerType === event.originalEvent.MSPOINTER_TYPE_TOUCH);
 		}
 		else {
-			this.isTouch = event.type !== 'mousedown';
+			this.setTouch(event.type !== 'mousedown');
 		}
 
 		var pos = this.getPositionFromEvent(event);
