@@ -70,14 +70,13 @@
 		background: rgba(white, 0.2)
 		background-position: 50% 50%
 		+bg-image-hd("liquid/arrow-left")
-		+transition(opacity 0.05s linear)
 		+box-shadow(0 0 2px rgba(black, 0.3), inset 0 2px 0 -1px rgba(white, 0.5), inset 0 -1px 0 rgba(black, 0.3), inset 0 0 1px rgba(white, 0.8))
 		&:hover, &.active
 			background-color: #ddd
 			background-color: rgba(black, 0.2)
 	&.rsts-no-touch:hover
-		.rsts-nav-prev, .rsts-nav-next, .rsts-video-stop, .rsts-nav-numbers a, .rsts-nav-tabs a
-			&.active
+		.rsts-nav-numbers, .rsts-nav-tabs
+			a.active
 				+opacity(0.6)
 	.rsts-nav-next
 		right: 20px
@@ -113,10 +112,10 @@
 			.rsts-nav, .rsts-nav-prev, .rsts-nav-next
 				opacity: 1
 	&.rsts-touch.rsts-video-playing
-		.rsts-nav-prev, .rsts-nav-next
+		.rsts-nav-prev, .rsts-nav-next, .rsts-nav
 			display: none
 	&.rsts-touch
-		.rsts-nav
+		.rsts-nav-numbers, .rsts-nav-tabs
 			display: none
 
 	.rsts-nav-numbers, .rsts-nav-tabs
