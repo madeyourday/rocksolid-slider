@@ -903,6 +903,10 @@ Rst.Slider = (function() {
 			}
 		}
 
+		if (isTouch) {
+			this.lastTouchTime = new Date().getTime();
+		}
+
 		this.isTouch = isTouch;
 
 	};
@@ -914,6 +918,7 @@ Rst.Slider = (function() {
 
 		var self = this;
 
+		this.lastTouchTime = 0;
 		this.setTouch(false);
 
 		var eventNames = {
@@ -980,7 +985,10 @@ Rst.Slider = (function() {
 			this.setTouch(event.originalEvent.pointerType === event.originalEvent.MSPOINTER_TYPE_TOUCH);
 		}
 		else {
-			this.setTouch(event.type !== 'mousedown');
+			this.setTouch(
+				event.type !== 'mousedown' ||
+				new Date().getTime() - this.lastTouchTime < 1000
+			);
 		}
 
 		var pos = this.getPositionFromEvent(event);
