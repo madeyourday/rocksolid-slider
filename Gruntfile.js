@@ -39,6 +39,7 @@ module.exports = function(grunt) {
 					config: 'sass/config.rb',
 					sassDir: 'sass',
 					cssDir: 'css-min',
+					imagesDir: 'img',
 					'output-style': 'compressed'
 				}
 			}
@@ -47,8 +48,12 @@ module.exports = function(grunt) {
 			buildmin: {
 				files: [
 					{
-						src: ['css-min/<%= pkg.name %>.css'],
-						dest: 'css/<%= pkg.name %>.min.css'
+						expand: true,
+						src: ['css-min/*.css'],
+						dest: 'css/',
+						rename: function(dest, src) {
+							return dest + src.split('/')[1].split('.')[0] + '.min.css';
+						}
 					}
 				]
 			}
