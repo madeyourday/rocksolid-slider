@@ -137,7 +137,13 @@ Rst.Slider = (function() {
 			this.elements.slides.on(
 				'transitionend webkitTransitionEnd oTransitionEnd msTransitionEnd',
 				function(event) {
-					if (event.target === self.elements.slides.get(0)) {
+					if ((
+						self.options.type === 'slide' &&
+						event.target === self.elements.slides.get(0)
+					) || (
+						self.options.type === 'fade' &&
+						event.target.parentNode === self.elements.slides.get(0)
+					)) {
 						self.cleanupSlides();
 					}
 				}
