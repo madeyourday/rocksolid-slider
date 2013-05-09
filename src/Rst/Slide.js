@@ -82,13 +82,15 @@ Rst.Slide = (function() {
 	Slide.prototype.size = function(x, y, ret) {
 
 		if (x && ! y) {
-			this.slider.modify(this.element, {width: x});
+			this.slider.modify(this.element, {width: x, height: ''});
+			this.resetScaledContent();
 			if (ret) {
 				y = this.element.height();
 			}
 		}
 		else if (y && ! x) {
-			this.slider.modify(this.element, {height: y});
+			this.slider.modify(this.element, {height: y, width: ''});
+			this.resetScaledContent();
 			if (ret) {
 				x = this.element.width();
 			}
@@ -166,6 +168,28 @@ Rst.Slide = (function() {
 
 			image.css(css);
 
+		}
+
+	};
+
+	/**
+	 * reset scaled slide contents
+	 */
+	Slide.prototype.resetScaledContent = function(x, y) {
+
+		var image = this.element.find('img').first();
+
+		if (this.type === 'image' || this.type === 'video') {
+			image.css({
+				width: '',
+				'max-width': '',
+				'min-width': '',
+				height: '',
+				'max-height': '',
+				'min-height': '',
+				'margin-left': '',
+				'margin-top': ''
+			});
 		}
 
 	};

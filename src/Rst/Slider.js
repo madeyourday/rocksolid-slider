@@ -62,14 +62,14 @@ Rst.Slider = (function() {
 			this.options.height === 'css' &&
 			this.elements.main.height() < 1
 		) {
-			this.options.height = 'auto';
+			this.autoSize = true;
 		}
 		else if (
 			this.options.direction === 'y' &&
 			this.options.width === 'css' &&
 			this.elements.main.width() < 1
 		) {
-			this.options.width = 'auto';
+			this.autoSize = true;
 		}
 
 		var proportion = this.options.width.match(/([0-9.]+)[^0-9.]*x[^0-9.]*([0-9.]+)/i);
@@ -294,7 +294,7 @@ Rst.Slider = (function() {
 			this.modify(this.slides[this.slideIndex].element, {opacity: 1}, true);
 		}
 
-		if (this.options.height === 'auto' || this.options.width === 'auto') {
+		if (this.autoSize) {
 			this.modify(this.elements.crop, {
 				width: size.x,
 				height: size.y
@@ -781,14 +781,14 @@ Rst.Slider = (function() {
 
 		var x, y;
 
-		if (this.options.width !== 'auto') {
+		if (!this.autoSize || this.options.direction === 'x') {
 			x = this.elements.main.width();
 			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
 			if (x < 10) {
 				x = 10;
 			}
 		}
-		if (this.options.height !== 'auto') {
+		if (!this.autoSize || this.options.direction === 'y') {
 			y = this.elements.main.height();
 			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
 			y -= this.nav.getSize().y;
@@ -844,16 +844,25 @@ Rst.Slider = (function() {
 		var self = this;
 		var size, width, height;
 
+		// Check if the CSS height value has changed to "auto" or vice versa
+		if (this.options.direction === 'x' && this.options.height === 'css') {
+			this.elements.view.css({display: 'none'});
+			this.nav.elements.main.css({display: 'none'});
+			this.autoSize = this.elements.main.height() < 1;
+			this.elements.view.css({display: ''});
+			this.nav.elements.main.css({display: ''});
+		}
+
 		size = this.getViewSize(this.slideIndex);
 		this.modify(this.elements.crop, {
 			width: size.x,
 			height: size.y
 		});
 
-		if (this.options.width !== 'auto') {
+		if (!this.autoSize || this.options.direction === 'x') {
 			width = size.x;
 		}
-		if (this.options.height !== 'auto') {
+		if (!this.autoSize || this.options.direction === 'y') {
 			height = size.y;
 		}
 
