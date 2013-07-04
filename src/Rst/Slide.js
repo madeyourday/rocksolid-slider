@@ -40,7 +40,7 @@ Rst.Slide = (function() {
 			this.data.name = this.data.name || this.element.find('img').attr('alt');
 		}
 
-		if (this.data.name) {
+		if (this.data.name && slider.options.captions) {
 			$(document.createElement('div'))
 				.addClass(slider.options.cssPrefix + 'caption')
 				.text(this.data.name)

@@ -225,7 +225,9 @@ Rst.Slider = (function() {
 		// URL hash prefix or false to disable deep linking, e.g. "slider-"
 		deepLinkPrefix: false,
 		// true to enable keyboard arrow navigation
-		keyboard: true
+		keyboard: true,
+		// true to enable caption elements inside slides
+		captions: true
 	};
 
 	/**
