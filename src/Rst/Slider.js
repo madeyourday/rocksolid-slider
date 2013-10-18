@@ -601,7 +601,9 @@ Rst.Slider = (function() {
 					this.options.duration * durationScale,
 				easing: timingFunction ? timingFunction :
 					fromDrag ? 'easeOutSine' : 'easeInOutSine',
-				complete: element === this.elements.slides ? function() {
+				complete: (
+					this.options.type === 'slide' ? element : element.parent()
+				)[0] === this.elements.slides[0] ? function() {
 					self.cleanupSlides();
 				} : null
 			});
