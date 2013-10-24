@@ -800,10 +800,10 @@ Rst.Slider = (function() {
 		}
 
 		if (! this.options.width && this.proportion) {
-			x = y * this.proportion;
+			x = Math.round(y * this.proportion);
 		}
 		if (! this.options.height && this.proportion) {
-			y = x / this.proportion;
+			y = Math.round(x / this.proportion);
 		}
 
 		return {x: x, y: y};
