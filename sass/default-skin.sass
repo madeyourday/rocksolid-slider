@@ -49,7 +49,7 @@
 		+opacity(1)
 		+transform(translate(0, 0))
 
-	.rsts-nav-prev, .rsts-nav-next, .rsts-video-play, .rsts-video-stop
+	.rsts-prev, .rsts-next, .rsts-video-play, .rsts-video-stop
 		position: absolute
 		right: 55px
 		bottom: 15px
@@ -73,18 +73,18 @@
 		&:hover
 			background-color: #eee
 			background-color: rgba(#eee, 0.7)
-	.rsts-nav-next
+	.rsts-next
 		right: 20px
 		+bg-image-hd("default/arrow-right")
 
 	&.rsts-direction-y
-		.rsts-nav-prev
+		.rsts-prev
 			+bg-image-hd("default/arrow-top")
-		.rsts-nav-next
+		.rsts-next
 			+bg-image-hd("default/arrow-bottom")
 
 	&.rsts-video-playing
-		.rsts-nav, .rsts-nav-prev, .rsts-nav-next
+		.rsts-nav, .rsts-prev, .rsts-next
 			display: none
 	&.rsts-touch
 		.rsts-nav-numbers, .rsts-nav-tabs
@@ -151,6 +151,10 @@
 			&:hover, &.active
 				background-color: #777
 				+box-shadow(inset 0 2px 0 -1px rgba(white, 0.5), inset 0 -2px 0 -1px rgba(black, 0.3), 0 0 0 1px #555)
+
+	.rsts-nav a
+		&.rsts-nav-prev, &.rsts-nav-next
+			display: none
 
 	.rsts-video-play
 		top: 50%

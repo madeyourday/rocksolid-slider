@@ -57,7 +57,7 @@
 		opacity: 1
 		+transform(translate(0, 0))
 
-	.rsts-nav-prev, .rsts-nav-next
+	.rsts-prev, .rsts-next
 		position: absolute
 		top: 50%
 		right: 20px
@@ -85,14 +85,14 @@
 			font: normal 24px/1 "Courier New", monospace
 			color: #444
 			text-indent: 0
-	.rsts-nav-prev
+	.rsts-prev
 		right: auto
 		left: 20px
 		&:after
 			content: "\2039"
 			left: 13px
 	&:hover
-		.rsts-nav-prev, .rsts-nav-next
+		.rsts-prev, .rsts-next
 			opacity: 0.5
 			&:hover
 				+box-shadow(0 0 2px 1px rgba(black, 0.2), 0 0 0 1px #ccc, 0 0 6px 3px rgba(#6fb2eb, 0), 0 0 3px 2px rgba(#6fb2eb, 0.4), inset 0 0 0 2px white, inset 0 1px 4px 1px rgba(black, 0.15))
@@ -105,7 +105,7 @@
 				+animation(none)
 
 	&.rsts-direction-y
-		.rsts-nav-prev, .rsts-nav-next
+		.rsts-prev, .rsts-next
 			top: 10px
 			left: 50%
 			margin:
@@ -118,7 +118,7 @@
 				left: 15px
 				font-size: 11px
 				color: #555
-		.rsts-nav-next
+		.rsts-next
 			top: auto
 			bottom: 23px
 			&:after
@@ -127,7 +127,7 @@
 				bottom: 12px
 
 	&.rsts-video-playing
-		.rsts-nav-prev, .rsts-nav-next
+		.rsts-prev, .rsts-next
 			+opacity(0)
 
 	.rsts-nav
@@ -229,6 +229,10 @@
 					border: none
 					+border-radius(100%)
 					+box-shadow(0 0 5px white)
+
+	.rsts-nav a
+		&.rsts-nav-prev, &.rsts-nav-next
+			display: none
 
 	.rsts-nav-bullets
 		line-height: 0
