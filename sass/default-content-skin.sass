@@ -75,6 +75,7 @@
 
 	.rsts-nav-prev, .rsts-nav-next
 		display: inline-block
+		vertical-align: top
 
 	.rsts-nav-prev
 		margin-right: 10px
@@ -106,7 +107,7 @@
 			display: inline
 
 	.rsts-nav-numbers, .rsts-nav-tabs
-		a
+		li > a
 			display: inline-block
 			height: 30px
 			min-width: 30px
@@ -123,7 +124,7 @@
 			background-color: rgba(#555, 0.6)
 			+background-clip
 			+box-shadow(0 0 2px rgba(black, 0.2))
-			+opacity(0)
+			// +opacity(0)
 			+single-transition(opacity, 0.2s, ease-in)
 			&:hover, &.active
 				color: #333
@@ -196,10 +197,10 @@
 		width: 100%
 		height: 2px
 		background-color: black
-		opacity: 0
+		+opacity(0)
 		+transition(opacity 0.2s linear)
 		div
 			height: 100%
 			background-color: white
 		&.rsts-progress-active
-			opacity: 0.3
+			+opacity(0.3)
