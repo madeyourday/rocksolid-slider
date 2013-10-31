@@ -50,11 +50,11 @@
 		color: #333
 		background: white
 		background: rgba(white, 0.75)
-		opacity: 0
+		+opacity(0)
 		+transform(translate(0, -20px))
 		+transition(opacity .5s, transform .5s)
 	.rsts-active .rsts-caption
-		opacity: 1
+		+opacity(1)
 		+transform(translate(0, 0))
 
 	.rsts-prev, .rsts-next
@@ -73,7 +73,7 @@
 		background: white
 		+background-image(linear-gradient(top, #eee 30%, white))
 		background-image: linear-gradient(to bottom, #eee 30%, white)
-		opacity: 0
+		+opacity(0)
 		+single-transition(opacity, 0.2s, ease-in)
 		+box-shadow(0 0 2px 1px rgba(black, 0.3), 0 0 0 1px #ccc, 0 0 4px 4px rgba(#6fb2eb, 0), 0 0 1px 2px rgba(#6fb2eb, 0), inset 0 0 0 2px white, inset 0 1px 4px 1px rgba(black, 0.15))
 		&:after
@@ -91,10 +91,10 @@
 			content: "\2039"
 	&:hover
 		.rsts-prev, .rsts-next
-			opacity: 0.5
+			+opacity(0.5)
 			&:hover
 				+box-shadow(0 0 2px 1px rgba(black, 0.2), 0 0 0 1px #ccc, 0 0 6px 3px rgba(#6fb2eb, 0), 0 0 3px 2px rgba(#6fb2eb, 0.4), inset 0 0 0 2px white, inset 0 1px 4px 1px rgba(black, 0.15))
-				opacity: 1
+				+opacity(1)
 				+transition-duration(0.1s)
 				+animation('pulsate 3.5s')
 				+animation-property('iteration-count', 'infinite')
@@ -327,7 +327,7 @@
 				indent: 0
 		&:hover,&:focus
 			background: white
-			opacity: 0.7
+			+opacity(0.7)
 			&:before
 				color: black
 	.rsts-video-youtube > .rsts-video-stop
@@ -353,7 +353,7 @@
 		height: 2px
 		background-color: white
 		background-color: rgba(white, 0.5)
-		opacity: 0
+		+opacity(0)
 		+transition(opacity 0.2s linear)
 		div
 			position: relative
@@ -380,7 +380,7 @@
 				background-image: linear-gradient(to right, rgba(white, 0) 0%, rgba(white, 1) 100%)
 				+box-shadow(0 0 3px -1px rgba(white, 0.5))
 		&.rsts-progress-active
-			opacity: 0.8
+			+opacity(0.8)
 
 @include keyframes('pulsate')
 	50%
