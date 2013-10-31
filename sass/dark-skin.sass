@@ -133,8 +133,9 @@
 		margin-top: 0
 		text-align: center
 		ul
-			margin: 0
-			padding: 0 10px
+			/* Forcing margin/padding, since '#content ul' is quite common */
+			margin: 0 !important
+			padding: 0 10px !important
 			border-top: 1px solid black
 			background-color: black
 			+background-image(linear-gradient(left, black, #333 50%, black))

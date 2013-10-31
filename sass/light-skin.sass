@@ -136,9 +136,10 @@
 		margin: -19px 0 -12px
 		text-align: center
 		ul
+			/* Forcing margin/padding, since '#content ul' is quite common */
 			display: inline-block
-			margin: 0
-			padding: 0 10px
+			margin: 0 !important
+			padding: 0 10px !important
 			+border-radius(18px)
 			background-color: white
 			+background-image(linear-gradient(bottom, rgba(black, 0.05), rgba(black, 0.05)))

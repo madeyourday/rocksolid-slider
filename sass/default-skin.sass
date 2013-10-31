@@ -97,8 +97,9 @@
 		left: 10px
 		text-align: right
 		ul
-			margin: 0
-			padding: 0
+			/* Forcing margin/padding, since '#content ul' is quite common */
+			margin: 0 !important
+			padding: 0 !important
 		li
 			display: inline
 
