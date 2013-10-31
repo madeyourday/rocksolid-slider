@@ -62,8 +62,25 @@ module.exports = function(grunt) {
 			buildmin: ['css-min']
 		},
 		watch: {
-			files: ['src/**/*', 'lib/**/*', 'sass/**/*'],
-			tasks: ['jshint', 'concat', 'compass:build']
+			sass: {
+				files: ['sass/**/*'],
+				tasks: ['compass:build']
+			},
+			js: {
+				files: ['src/**/*', 'lib/**/*'],
+				tasks: ['jshint', 'concat']
+			},
+			livereload: {
+				files: [
+					'*.js',
+					'css/**/*',
+					'img/**/*',
+					'example/**/*'
+				],
+				options: {
+					livereload: true
+				}
+			}
 		},
 		jshint: {
 			files: ['src/Rst/*.js', 'src/jquery-rstSlider.js']
