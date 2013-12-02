@@ -76,6 +76,14 @@ Rst.Slide = (function() {
 	}
 
 	/**
+	 * @var object regular expressions for video URLs
+	 */
+	Slide.prototype.videoRegExp = {
+		youtube: /^https?:\/\/(?:www\.youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\/)/i,
+		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)/i
+	};
+
+	/**
 	 * get width and height based on width or height
 	 * @return object {x: ..., y: ...}
 	 */
@@ -280,15 +288,15 @@ Rst.Slide = (function() {
 	Slide.prototype.startVideo = function() {
 
 		var self = this;
-		var videoId, apiCallback;
+		var videoId, apiCallback, matches;
 
 		this.slider.stopAutoplay(true);
 
-		if (this.data.video.substr(0, 31) === 'http://www.youtube.com/watch?v=') {
+		if ((matches = this.data.video.match(this.videoRegExp.youtube))) {
 
 			this.element.addClass(this.slider.options.cssPrefix + 'video-youtube');
 
-			videoId = this.data.video.substr(31, 11);
+			videoId = matches[1];
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
@@ -328,11 +336,11 @@ Rst.Slide = (function() {
 			}
 
 		}
-		else if (this.data.video.substr(0, 17) === 'http://vimeo.com/') {
+		else if ((matches = this.data.video.match(this.videoRegExp.vimeo))) {
 
 			this.element.addClass(this.slider.options.cssPrefix + 'video-vimeo');
 
-			videoId = this.data.video.substr(17);
+			videoId = matches[1];
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
