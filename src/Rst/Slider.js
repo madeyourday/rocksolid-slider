@@ -1069,7 +1069,7 @@ Rst.Slider = (function() {
 			x: pos.x - this.elements.slides.offset().left + this.elements.crop.offset().left,
 			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().top
 		};
-		this.dragLastPos = this.dragStartPos[this.options.direction];
+		this.dragLastPos = pos[this.options.direction];
 		this.dragLastDiff = 0;
 		this.touchStartPos = pos;
 		this.touchAxis = '';
