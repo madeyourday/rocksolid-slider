@@ -369,6 +369,18 @@ Rst.Slide = (function() {
 			});
 
 		}
+		else {
+
+			this.element.addClass(this.slider.options.cssPrefix + 'video-unknown');
+
+			this.videoElement = $(document.createElement('iframe'))
+				.addClass(this.slider.options.cssPrefix + 'video-iframe')
+				.attr('src', this.data.video)
+				.attr('frameborder', 0)
+				.attr('allowfullscreen', 'allowfullscreen')
+				.appendTo(this.element);
+
+		}
 
 		// mozilla has problems with iframes/flash and 3D transforms
 		if (
