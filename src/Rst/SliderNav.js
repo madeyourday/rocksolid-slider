@@ -46,27 +46,34 @@ Rst.SliderNav = (function() {
 		this.elements.mainPrev = $(document.createElement('a'))
 			.attr('href', '')
 			.text('prev')
-			.addClass(slider.options.cssPrefix + 'nav-prev')
 			.on('click', function(event){
 				event.preventDefault();
 				self.slider.prev();
-			});
+			})
+			.appendTo(
+				$(document.createElement('li'))
+					.addClass(slider.options.cssPrefix + 'nav-prev')
+			);
 		this.elements.mainNext = $(document.createElement('a'))
 			.attr('href', '')
 			.text('next')
-			.addClass(slider.options.cssPrefix + 'nav-next')
 			.on('click', function(event){
 				event.preventDefault();
 				self.slider.next();
-			});
+			})
+			.appendTo(
+				$(document.createElement('li'))
+					.addClass(slider.options.cssPrefix + 'nav-next')
+			);
+
 
 		var navUl = document.createElement('ul');
 		$.each(this.slider.getSlides(), function(i, slide){
 			self.elements[i] = self.createNavItem(i, slide.getData()).appendTo(navUl);
 		});
 
-		this.elements.mainPrev.prependTo(navUl);
-		this.elements.mainNext.appendTo(navUl);
+		this.elements.mainPrev.parent().prependTo(navUl);
+		this.elements.mainNext.parent().appendTo(navUl);
 
 		this.elements.main.append(navUl);
 		slider.elements.main.append(this.elements.main);
@@ -98,8 +105,9 @@ Rst.SliderNav = (function() {
 
 		var self = this;
 
-		return $(document.createElement('li')).append(
-			$(document.createElement('a'))
+		return $(document.createElement('li'))
+			.addClass(self.slider.options.cssPrefix + 'nav-item')
+			.append($(document.createElement('a'))
 				.attr('href', '')
 				.text((self.slider.options.navType !== 'numbers' && data.name) ?
 					data.name :
@@ -109,7 +117,7 @@ Rst.SliderNav = (function() {
 					event.preventDefault();
 					self.slider.goTo(index);
 				})
-		);
+			);
 
 	};
 
