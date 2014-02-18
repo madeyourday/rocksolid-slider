@@ -86,6 +86,9 @@ module.exports = function(grunt) {
 			}
 		},
 		jshint: {
+			options: {
+				'laxbreak': true
+			},
 			files: ['src/Rst/*.js', 'src/jquery-rstSlider.js']
 		}
 	});

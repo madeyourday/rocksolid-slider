@@ -20,66 +20,79 @@ Rst.SliderNav = (function() {
 
 		this.slider = slider;
 		this.activeIndex = null;
-		this.elements = {
-			prev: $(document.createElement('a'))
+		this.elements = {};
+
+		if (slider.options.controls) {
+
+			this.elements.prev = $(document.createElement('a'))
 				.attr('href', '')
 				.text('prev')
 				.addClass(slider.options.cssPrefix + 'prev')
 				.on('click', function(event){
 					event.preventDefault();
 					self.slider.prev();
-				}),
-			next: $(document.createElement('a'))
+				});
+
+			this.elements.next = $(document.createElement('a'))
 				.attr('href', '')
 				.text('next')
 				.on('click', function(event){
 					event.preventDefault();
 					self.slider.next();
 				})
-				.addClass(slider.options.cssPrefix + 'next'),
-			main: $(document.createElement('div'))
+				.addClass(slider.options.cssPrefix + 'next');
+
+			slider.elements.view
+				.append(this.elements.prev)
+				.append(this.elements.next);
+
+		}
+
+		if (slider.options.navType !== 'none') {
+
+			this.elements.main = $(document.createElement('div'))
 				.addClass(
 					slider.options.cssPrefix + 'nav ' +
 					slider.options.cssPrefix + 'nav-' + slider.options.navType
-				)
-		};
-		this.elements.mainPrev = $(document.createElement('a'))
-			.attr('href', '')
-			.text('prev')
-			.on('click', function(event){
-				event.preventDefault();
-				self.slider.prev();
-			})
-			.appendTo(
-				$(document.createElement('li'))
-					.addClass(slider.options.cssPrefix + 'nav-prev')
-			);
-		this.elements.mainNext = $(document.createElement('a'))
-			.attr('href', '')
-			.text('next')
-			.on('click', function(event){
-				event.preventDefault();
-				self.slider.next();
-			})
-			.appendTo(
-				$(document.createElement('li'))
-					.addClass(slider.options.cssPrefix + 'nav-next')
-			);
+				);
 
+			this.elements.mainPrev = $(document.createElement('a'))
+				.attr('href', '')
+				.text('prev')
+				.on('click', function(event){
+					event.preventDefault();
+					self.slider.prev();
+				})
+				.appendTo(
+					$(document.createElement('li'))
+						.addClass(slider.options.cssPrefix + 'nav-prev')
+				);
 
-		var navUl = document.createElement('ul');
-		$.each(this.slider.getSlides(), function(i, slide){
-			self.elements[i] = self.createNavItem(i, slide.getData()).appendTo(navUl);
-		});
+			this.elements.mainNext = $(document.createElement('a'))
+				.attr('href', '')
+				.text('next')
+				.on('click', function(event){
+					event.preventDefault();
+					self.slider.next();
+				})
+				.appendTo(
+					$(document.createElement('li'))
+						.addClass(slider.options.cssPrefix + 'nav-next')
+				);
 
-		this.elements.mainPrev.parent().prependTo(navUl);
-		this.elements.mainNext.parent().appendTo(navUl);
+			var navUl = document.createElement('ul');
+			$.each(this.slider.getSlides(), function(i, slide){
+				self.elements[i] = self.createNavItem(i, slide.getData())
+					.appendTo(navUl);
+			});
 
-		this.elements.main.append(navUl);
-		slider.elements.main.append(this.elements.main);
-		slider.elements.view
-			.append(this.elements.prev)
-			.append(this.elements.next);
+			this.elements.mainPrev.parent().prependTo(navUl);
+			this.elements.mainNext.parent().appendTo(navUl);
+
+			this.elements.main.append(navUl);
+			slider.elements.main.append(this.elements.main);
+
+		}
 
 	}
 
@@ -88,12 +101,17 @@ Rst.SliderNav = (function() {
 	 */
 	SliderNav.prototype.setActive = function(index) {
 
-		if (typeof this.activeIndex === 'number') {
+		if (
+			typeof this.activeIndex === 'number'
+			&& this.elements[this.activeIndex]
+		) {
 			this.elements[this.activeIndex].children('a').removeClass('active');
 		}
 
 		this.activeIndex = index;
-		this.elements[this.activeIndex].children('a').addClass('active');
+		if (this.elements[this.activeIndex]) {
+			this.elements[this.activeIndex].children('a').addClass('active');
+		}
 
 	};
 
@@ -127,7 +145,10 @@ Rst.SliderNav = (function() {
 	 */
 	SliderNav.prototype.getSize = function() {
 
-		if (this.elements.main.css('position') === 'absolute') {
+		if (
+			!this.elements.main
+			|| this.elements.main.css('position') === 'absolute'
+		) {
 			return {x: 0, y: 0};
 		}
 

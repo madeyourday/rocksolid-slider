@@ -229,8 +229,10 @@ Rst.Slider = (function() {
 		autoplayProgress: false,
 		// true to pause the autoplay on hover
 		pauseAutoplayOnHover: false,
-		// navigation type (bullets, numbers, tabs)
+		// navigation type (bullets, numbers, tabs, none)
 		navType: 'bullets',
+		// false to hide the prev and next elements
+		controls: true,
 		// image scale mode (fit, crop, scale)
 		// only works if width and height are not set to "auto"
 		scaleMode: 'fit',
@@ -890,7 +892,9 @@ Rst.Slider = (function() {
 		// Check if the CSS height value has changed to "auto" or vice versa
 		if (this.options.direction === 'x' && this.options.height === 'css') {
 			this.elements.view.css({display: 'none'});
-			this.nav.elements.main.css({display: 'none'});
+			if (this.nav.elements.main) {
+				this.nav.elements.main.css({display: 'none'});
+			}
 			if (this.elements.header) {
 				this.elements.header.css({display: 'none'});
 			}
@@ -899,7 +903,9 @@ Rst.Slider = (function() {
 			}
 			this.autoSize = this.elements.main.height() < 1;
 			this.elements.view.css({display: ''});
-			this.nav.elements.main.css({display: ''});
+			if (this.nav.elements.main) {
+				this.nav.elements.main.css({display: ''});
+			}
 			if (this.elements.header) {
 				this.elements.header.css({display: ''});
 			}
