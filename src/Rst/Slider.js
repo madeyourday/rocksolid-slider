@@ -231,7 +231,7 @@ Rst.Slider = (function() {
 		pauseAutoplayOnHover: false,
 		// navigation type (bullets, numbers, tabs, none)
 		navType: 'bullets',
-		// false to hide the prev and next elements
+		// false to hide the prev and next controls
 		controls: true,
 		// image scale mode (fit, crop, scale)
 		// only works if width and height are not set to "auto"
