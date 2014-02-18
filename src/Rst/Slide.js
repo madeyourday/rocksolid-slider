@@ -47,8 +47,20 @@ Rst.Slide = (function() {
 				.appendTo(this.element);
 		}
 
-		this.element.find('img').on('load', function(){
+		this.element.find('img').on('load', function() {
+
 			slider.resize();
+
+			// Fix safari bug with invisible images, see #9
+			if (slider.css3Supported) {
+				// Remove 3d transforms
+				slider.elements.crop.css('transform', '');
+				// Get the css value to ensure the engine applies the styles
+				slider.elements.crop.css('transform');
+				// Restore the original value
+				slider.elements.crop.css('transform', 'translateZ(0)');
+			}
+
 		});
 
 		var headlines = this.element.find('h1,h2,h3,h4,h5,h6');
