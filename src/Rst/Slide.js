@@ -269,17 +269,6 @@ Rst.Slide = (function() {
 			delete this.videoStopButton;
 		}
 
-		// mozilla has problems with iframes/flash and 3D transforms
-		if (
-			this.slider.engine === 'moz' &&
-			this.slider.css3Supported &&
-			this.slider.options.type === 'slide'
-		) {
-			this.slider.elements.crop.css({
-				transform: 'translateZ(0)'
-			});
-		}
-
 		this.slider.elements.main.removeClass(
 			this.slider.options.cssPrefix + 'video-playing'
 		);
@@ -392,28 +381,6 @@ Rst.Slide = (function() {
 				.attr('allowfullscreen', 'allowfullscreen')
 				.appendTo(this.element);
 
-		}
-
-		// mozilla has problems with iframes/flash and 3D transforms
-		if (
-			this.videoElement &&
-			this.slider.engine === 'moz' &&
-			this.slider.css3Supported &&
-			this.slider.options.type === 'slide'
-		) {
-			this.slider.css3Supported = false;
-			this.slider.modify(this.element, {
-				offset: this.slider.slideIndex *
-					(this.slider.slideSize + this.slider.options.gapSize)
-			});
-			this.slider.modify(this.slider.elements.slides, {
-				offset: - this.slider.slideIndex *
-					(this.slider.slideSize + this.slider.options.gapSize)
-			});
-			this.slider.elements.crop.css({
-				transform: ''
-			});
-			this.slider.css3Supported = true;
 		}
 
 		// iPad needs a close button outside of the video
