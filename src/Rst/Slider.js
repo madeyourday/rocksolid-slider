@@ -168,7 +168,9 @@ Rst.Slider = (function() {
 
 		if (this.options.pauseAutoplayOnHover) {
 			this.elements.view.on('mouseenter', function() {
-				self.pauseAutoplay();
+				if (!self.isTouch) {
+					self.pauseAutoplay();
+				}
 			});
 			this.elements.view.on('mouseleave', function() {
 				self.playAutoplay();
@@ -418,7 +420,7 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.pauseAutoplay = function() {
 
-		if (! this.options.autoplay || this.autoplayPaused || this.isTouch) {
+		if (! this.options.autoplay || this.autoplayPaused) {
 			return;
 		}
 
@@ -990,6 +992,8 @@ Rst.Slider = (function() {
 
 		// Check if the CSS height value has changed to "auto" or vice versa
 		if (this.options.direction === 'x' && this.options.height === 'css') {
+			// Pause autoplay to freeze the progress bar
+			this.pauseAutoplay();
 			this.elements.view.css({display: 'none'});
 			if (this.nav.elements.main) {
 				this.nav.elements.main.css({display: 'none'});
@@ -1011,6 +1015,7 @@ Rst.Slider = (function() {
 			if (this.elements.footer) {
 				this.elements.footer.css({display: ''});
 			}
+			this.playAutoplay();
 		}
 
 		size = this.getViewSize(this.slideIndex);
