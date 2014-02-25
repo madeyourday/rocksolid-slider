@@ -744,6 +744,10 @@ Rst.Slider = (function() {
 
 		this.elements.main.empty();
 
+		if (this.slides.length === 0) {
+			throw new Error('No slides found');
+		}
+
 	};
 
 	/**
