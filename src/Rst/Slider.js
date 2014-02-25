@@ -559,6 +559,9 @@ Rst.Slider = (function() {
 		// currently only detecting mozilla is needed
 		this.engine = 'mozInnerScreenX' in window ? 'moz' : 'unknown';
 		this.device = navigator.platform;
+		if (this.device && this.device.indexOf('iPad') === 0) {
+			this.device = 'iPad';
+		}
 
 		var el = document.createElement('div');
 		document.body.appendChild(el);
