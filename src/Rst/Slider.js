@@ -234,7 +234,7 @@ Rst.Slider = (function() {
 		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 2,
-		// gap between the slides in pixels
+		// gap between the slides in pixels or as string in percent
 		gapSize: 20,
 		// duration of the slide animation in milliseconds
 		duration: 400,
@@ -308,7 +308,7 @@ Rst.Slider = (function() {
 
 		var slideWidth = this.getViewSizeFixed(true)[this.options.direction]
 			* this.options.visibleArea
-			+ this.options.gapSize;
+			+ this.getGapSize();
 
 		if (loop) {
 			this.activeSlideOffset += slideWidth * loop;
@@ -917,7 +917,7 @@ Rst.Slider = (function() {
 		var size = this.getViewSizeFixed(true);
 
 		return (index - this.slideIndex)
-			* (size[this.options.direction] * this.options.visibleArea + this.options.gapSize)
+			* (size[this.options.direction] * this.options.visibleArea + this.getGapSize())
 			+ this.activeSlideOffset;
 	};
 
@@ -1006,6 +1006,21 @@ Rst.Slider = (function() {
 		size[this.options.direction] /= this.options.visibleArea;
 
 		return size;
+
+	};
+
+	/**
+	 * @return number gap size in pixels
+	 */
+	Slider.prototype.getGapSize = function() {
+
+		var size = this.options.gapSize;
+		if (typeof size === 'string' && size.substr(-1) === '%') {
+			size = size.split('%')[0].split(',').join('.')
+				* this.getViewSizeFixed(true)[this.options.direction] / 100;
+		}
+
+		return parseFloat(size) || 0;
 
 	};
 
@@ -1271,7 +1286,7 @@ Rst.Slider = (function() {
 					/ 2
 				)
 			) /
-			(this.slideSize + this.options.gapSize)
+			(this.slideSize + this.getGapSize())
 		);
 
 		if (this.dragLastDiff <= 0) {
