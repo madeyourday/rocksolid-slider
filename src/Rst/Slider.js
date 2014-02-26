@@ -29,6 +29,10 @@ Rst.Slider = (function() {
 			throw new Error('height "auto" with direction "y" ist not possible');
 		}
 
+		if (this.options.type !== 'slide') {
+			this.options.visibleArea = 1;
+		}
+
 		this.checkCss3Support();
 
 		this.readSlides();
@@ -122,6 +126,15 @@ Rst.Slider = (function() {
 				.appendTo(this.elements.progress);
 		}
 
+		if (this.options.visibleArea < 1) {
+			this.elements.overlayPrev = $(document.createElement('div'))
+				.addClass(this.options.cssPrefix + 'overlay-prev')
+				.appendTo(this.elements.view);
+			this.elements.overlayNext = $(document.createElement('div'))
+				.addClass(this.options.cssPrefix + 'overlay-next')
+				.appendTo(this.elements.view);
+		}
+
 		this.nav = new Rst.SliderNav(this);
 		this.nav.setActive(this.slideIndex);
 
@@ -200,6 +213,8 @@ Rst.Slider = (function() {
 		type: 'slide',
 		// "x" for horizontal or "y" for vertical
 		direction: 'x',
+		// the size of the area for the visible slide (0 = 0%, 1 = 100%)
+		visibleArea: 1,
 		// if true the slides get shuffled once on initialization
 		random: false,
 		// if true the slider loops infinitely
@@ -218,7 +233,7 @@ Rst.Slider = (function() {
 		width: 'css',
 		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
-		preloadSlides: 1,
+		preloadSlides: 2,
 		// gap between the slides in pixels
 		gapSize: 20,
 		// duration of the slide animation in milliseconds
@@ -292,6 +307,7 @@ Rst.Slider = (function() {
 		}
 
 		var slideWidth = this.getViewSizeFixed(true)[this.options.direction]
+			* this.options.visibleArea
 			+ this.options.gapSize;
 
 		if (loop) {
@@ -321,8 +337,7 @@ Rst.Slider = (function() {
 
 		if (
 			fromDrag &&
-			this.slides[index].element.get(0).parentNode &&
-			this.slides[index].element.get(0).parentNode.tagName &&
+			this.slides[index].isInjected() &&
 			Math.round(this.slides[index].element.position()[
 				{x: 'left', y: 'top'}[this.options.direction]
 			]) === Math.round(this.getSlideOffset(index))
@@ -336,12 +351,13 @@ Rst.Slider = (function() {
 
 		var size = this.getViewSize(index);
 		var durationScale;
+		var targetPos = - this.getSlideOffset(index)
+			+ (size[this.options.direction] * (1 - this.options.visibleArea) / 2);
 
 		if (fromDrag && !overflow) {
 			durationScale = Math.abs((
-				this.getOffset(this.elements.slides) +
-				this.getSlideOffset(index)
-			) / (size[this.options.direction] + this.options.gapSize));
+				this.getOffset(this.elements.slides) - targetPos
+			) / slideWidth);
 		}
 		else if (fromDrag && overflow) {
 			durationScale = 0.7;
@@ -349,7 +365,7 @@ Rst.Slider = (function() {
 
 		if (this.options.type === 'slide') {
 			this.modify(this.elements.slides, {
-				offset: -this.getSlideOffset(index)
+				offset: targetPos
 			}, true, durationScale, fromDrag, !fromDrag && overflow);
 		}
 		else if (this.options.type === 'fade') {
@@ -764,6 +780,7 @@ Rst.Slider = (function() {
 			);
 		}
 		var size = this.getViewSizeFixed();
+		size[this.options.direction] *= this.options.visibleArea;
 
 		for (var slide, key, i = slideIndex - preloadCount; i <= slideIndex + preloadCount; i++) {
 
@@ -776,21 +793,25 @@ Rst.Slider = (function() {
 			slide = this.slides[key];
 
 			if (self.options.type === 'slide') {
+				if (!this.options.loop && (i < 0 || i >= this.slides.length)) {
+					continue;
+				}
 				if (
-					(oldIndex !== undefined || !this.options.loop)
+					oldIndex !== undefined
 					&& key !== slideIndex
 					&& (i < 0 || i >= this.slides.length)
+					&& slide.isInjected()
 				) {
 					this.preloadOnCleanup = true;
 					continue;
 				}
 				self.modify(slide.element, {
-					offset: self.getSlideOffset(i, size)
+					offset: self.getSlideOffset(i)
 				});
 			}
 
 			// Check if the slide isn't already injected
-			if (! slide.element.get(0).parentNode || ! slide.element.get(0).parentNode.tagName) {
+			if (!slide.isInjected()) {
 				if (self.options.type === 'fade') {
 					self.modify(slide.element, {opacity: 0});
 				}
@@ -838,10 +859,7 @@ Rst.Slider = (function() {
 		}
 
 		$.each(this.slides, function(i, slide) {
-			if (
-				slide.element.get(0).parentNode && slide.element.get(0).parentNode.tagName
-				&& $.inArray(i, keepSlides) === -1
-			) {
+			if (slide.isInjected() && $.inArray(i, keepSlides) === -1) {
 				if (
 					self.options.type === 'fade' &&
 					self.slides[self.slideIndex].element.css('opacity') < 1
@@ -899,7 +917,7 @@ Rst.Slider = (function() {
 		var size = this.getViewSizeFixed(true);
 
 		return (index - this.slideIndex)
-			* (size[this.options.direction] + this.options.gapSize)
+			* (size[this.options.direction] * this.options.visibleArea + this.options.gapSize)
 			+ this.activeSlideOffset;
 	};
 
@@ -910,7 +928,8 @@ Rst.Slider = (function() {
 	Slider.prototype.getViewSizeFixed = function(useCache) {
 
 		if (useCache && this.viewSizeFixedCache) {
-			return this.viewSizeFixedCache;
+			// Return a copy of the object
+			return $.extend({}, this.viewSizeFixedCache);
 		}
 
 		var x, y;
@@ -954,7 +973,8 @@ Rst.Slider = (function() {
 
 		this.viewSizeFixedCache = {x: x, y: y};
 
-		return this.viewSizeFixedCache;
+		// Return a copy of the object
+		return $.extend({}, this.viewSizeFixedCache);
 
 	};
 
@@ -968,6 +988,7 @@ Rst.Slider = (function() {
 		slideIndex = slideIndex || 0;
 
 		size = this.getViewSizeFixed();
+		size[this.options.direction] *= this.options.visibleArea;
 
 		if (! size.x || ! size.y) {
 			// calculate the missing dimension
@@ -981,6 +1002,8 @@ Rst.Slider = (function() {
 		}
 
 		this.slideSize = size[this.options.direction];
+
+		size[this.options.direction] /= this.options.visibleArea;
 
 		return size;
 
@@ -1028,6 +1051,27 @@ Rst.Slider = (function() {
 			height: size.y
 		});
 
+		if (this.elements.overlayPrev && this.elements.overlayNext) {
+			if (this.options.direction === 'x') {
+				this.modify(this.elements.overlayPrev, {
+					width: size.x * (1 - this.options.visibleArea) / 2
+				});
+				this.modify(this.elements.overlayNext, {
+					width: size.x * (1 - this.options.visibleArea) / 2
+				});
+			}
+			else {
+				this.modify(this.elements.overlayPrev, {
+					height: size.y * (1 - this.options.visibleArea) / 2
+				});
+				this.modify(this.elements.overlayNext, {
+					height: size.y * (1 - this.options.visibleArea) / 2
+				});
+			}
+		}
+
+		size[this.options.direction] *= this.options.visibleArea;
+
 		if (!this.autoSize || this.options.direction === 'x') {
 			width = size.x;
 		}
@@ -1036,7 +1080,7 @@ Rst.Slider = (function() {
 		}
 
 		$.each(this.slides, function(i, slide) {
-			if (slide.element.get(0).parentNode && slide.element.get(0).parentNode.tagName) {
+			if (slide.isInjected()) {
 				slide.size(width, height);
 				if (self.options.type === 'slide') {
 					self.modify(slide.element, {
@@ -1051,6 +1095,12 @@ Rst.Slider = (function() {
 		if (this.options.type === 'slide') {
 			this.modify(this.elements.slides, {
 				offset: -self.getSlideOffset(this.slideIndex)
+					+ (
+						size[this.options.direction]
+						/ this.options.visibleArea
+						* (1 - this.options.visibleArea)
+						/ 2
+					)
 			});
 		}
 
@@ -1212,7 +1262,15 @@ Rst.Slider = (function() {
 		this.elements.main.removeClass(this.options.cssPrefix + 'dragging');
 
 		var leftSlideIndex = this.slideIndex + Math.floor(
-			(- this.getOffset(this.elements.slides) - this.activeSlideOffset) /
+			(
+				- this.getOffset(this.elements.slides)
+				- this.activeSlideOffset
+				+ (
+					this.getViewSizeFixed(true)[this.options.direction]
+					* (1 - this.options.visibleArea)
+					/ 2
+				)
+			) /
 			(this.slideSize + this.options.gapSize)
 		);
 
@@ -1281,14 +1339,26 @@ Rst.Slider = (function() {
 			this.dragStartPos[this.options.direction];
 
 		if (!this.options.loop) {
-			if (slidesPos > - this.getSlideOffset(0)) {
+			if (slidesPos > - this.getSlideOffset(0) + (
+				this.getViewSizeFixed(true)[this.options.direction]
+				* (1 - this.options.visibleArea) / 2
+			)) {
 				slidesPos = (slidesPos * 0.4) - (
-					this.getSlideOffset(0) * 0.6
+					(this.getSlideOffset(0) - (
+						this.getViewSizeFixed(true)[this.options.direction]
+						* (1 - this.options.visibleArea) / 2
+					)) * 0.6
 				);
 			}
-			if (slidesPos < - this.getSlideOffset(this.slides.length - 1)) {
+			if (slidesPos < - this.getSlideOffset(this.slides.length - 1) + (
+				this.getViewSizeFixed(true)[this.options.direction]
+				* (1 - this.options.visibleArea) / 2
+			)) {
 				slidesPos = (slidesPos * 0.4) - (
-					this.getSlideOffset(this.slides.length - 1) * 0.6
+					(this.getSlideOffset(this.slides.length - 1) - (
+						this.getViewSizeFixed(true)[this.options.direction]
+						* (1 - this.options.visibleArea) / 2
+					)) * 0.6
 				);
 			}
 		}

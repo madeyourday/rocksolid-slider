@@ -96,6 +96,16 @@ Rst.Slide = (function() {
 	};
 
 	/**
+	 * @return boolean true if the slide is injected to the DOM
+	 */
+	Slide.prototype.isInjected = function() {
+		return !!(
+			this.element.get(0).parentNode
+			&& this.element.get(0).parentNode.tagName
+		);
+	};
+
+	/**
 	 * get width and height based on width or height
 	 * @return object {x: ..., y: ...}
 	 */
