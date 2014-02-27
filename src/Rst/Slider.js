@@ -694,6 +694,17 @@ Rst.Slider = (function() {
 			element.css(css);
 		}
 
+		if (animate) {
+			if ((
+				this.options.type === 'slide' ? element : element.parent()
+			)[0] === this.elements.slides[0]) {
+				clearTimeout(this.cleanupSlidesTimeout);
+				this.cleanupSlidesTimeout = setTimeout(function() {
+					self.cleanupSlides();
+				}, parseFloat(css['transition-duration']) + 100);
+			}
+		}
+
 		if (element.bounceTimeout) {
 			clearTimeout(element.bounceTimeout);
 		}
@@ -842,6 +853,8 @@ Rst.Slider = (function() {
 	 * removes Slide objects from the DOM
 	 */
 	Slider.prototype.cleanupSlides = function() {
+
+		clearTimeout(this.cleanupSlidesTimeout);
 
 		var self = this;
 		var preloadCount = this.options.type === 'slide' ?
