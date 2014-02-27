@@ -47,7 +47,7 @@ Rst.Slide = (function() {
 				.appendTo(this.element);
 		}
 
-		this.element.find('img').on('load', function() {
+		this.element.find('img,video').on('load loadedmetadata', function() {
 
 			slider.resize();
 
@@ -245,6 +245,21 @@ Rst.Slide = (function() {
 			this.slider.options.videoAutoplay
 		) {
 			this.startVideo();
+		}
+
+		if (state === 'active' && state !== this.state) {
+			this.element.find('video[autoplay]').each(function() {
+				if (this.play) {
+					this.play();
+				}
+			});
+		}
+		else if (state !== 'active' && this.state === 'active') {
+			this.element.find('video').each(function() {
+				if (this.pause) {
+					this.pause();
+				}
+			});
 		}
 
 		this.state = state;
