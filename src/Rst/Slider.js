@@ -1015,7 +1015,7 @@ Rst.Slider = (function() {
 	Slider.prototype.getGapSize = function() {
 
 		var size = this.options.gapSize;
-		if (typeof size === 'string' && size.substr(-1) === '%') {
+		if (typeof size === 'string' && size.slice(-1) === '%') {
 			size = size.split('%')[0].split(',').join('.')
 				* this.getViewSizeFixed(true)[this.options.direction] / 100;
 		}
