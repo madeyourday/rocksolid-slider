@@ -253,7 +253,8 @@ Rst.Slider = (function() {
 		navType: 'bullets',
 		// false to hide the prev and next controls
 		controls: true,
-		// image scale mode (fit, crop, scale)
+		// image scale mode (fit, crop, scale or none)
+		// use the attribute data-rsts-scale-mode to set the mode per slide
 		// only works if width and height are not set to "auto"
 		scaleMode: 'fit',
 		// URL hash prefix or false to disable deep linking, e.g. "slider-"
@@ -584,6 +585,12 @@ Rst.Slider = (function() {
 		this.device = navigator.platform;
 		if (this.device && this.device.indexOf('iPad') === 0) {
 			this.device = 'iPad';
+		}
+		if (this.device && this.device.indexOf('iPhone') === 0) {
+			this.device = 'iPhone';
+		}
+		if (this.device && this.device.indexOf('iPod') === 0) {
+			this.device = 'iPod';
 		}
 
 		var el = document.createElement('div');

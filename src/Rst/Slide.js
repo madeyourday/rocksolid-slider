@@ -23,10 +23,10 @@ Rst.Slide = (function() {
 		var $element = $(element);
 
 		this.data = {
-			name: $element.attr('data-rsts-name') || $(element).attr('title')
+			name: $element.attr('data-rsts-name') || $element.attr('title')
 		};
 
-		if (element.tagName.toLowerCase() === 'img') {
+		if (element.nodeName === 'IMG') {
 			this.type = 'image';
 		}
 		this.type = $element.attr('data-rsts-type') || this.type || 'default';
@@ -36,8 +36,53 @@ Rst.Slide = (function() {
 			.addClass(slider.options.cssPrefix + 'slide-' + this.type)
 			.append(element);
 
+		if (
+			// Check if video element is supported
+			!document.createElement('video').canPlayType
+			// iPhone doesn't support background videos
+			|| this.slider.device === 'iPhone'
+			|| this.slider.device === 'iPod'
+		) {
+			this.element.find('[data-rsts-background]').each(function() {
+				if (this.nodeName !== 'VIDEO') {
+					return;
+				}
+				var $this = $(this);
+				if ($this.attr('poster')) {
+					$(document.createElement('img'))
+						.attr('src', $this.attr('poster'))
+						.attr('data-rsts-background', '')
+						.attr('data-rsts-scale-mode', $this.attr('data-rsts-scale-mode'))
+						.insertBefore($this);
+				}
+				$this.detach();
+			});
+		}
+
+		this.backgrounds = this.element.find('[data-rsts-background]')
+			.attr('autoplay', true)
+			.attr('loop', true)
+			.css({
+				position: 'absolute',
+				top: 0,
+				left: 0
+			})
+			.prependTo(this.element);
+
+		if (this.backgrounds.length) {
+			this.element.children().last().css({
+				position: 'relative'
+			});
+		}
+
+		this.element.find('video[autoplay]').each(function() {
+			if (this.pause) {
+				this.pause();
+			}
+		});
+
 		if (this.type === 'image') {
-			this.data.name = this.data.name || this.element.find('img').attr('alt');
+			this.data.name = this.data.name || this.element.find('img').last().attr('alt');
 		}
 
 		if (this.data.name && slider.options.captions) {
@@ -47,7 +92,7 @@ Rst.Slide = (function() {
 				.appendTo(this.element);
 		}
 
-		this.element.find('img,video').on('load loadedmetadata', function() {
+		var mediaLoadEvent = function() {
 
 			slider.resize();
 
@@ -61,7 +106,10 @@ Rst.Slide = (function() {
 				slider.elements.crop.css('transform', 'translateZ(0)');
 			}
 
-		});
+		};
+
+		this.element.find('img').on('load', mediaLoadEvent);
+		this.element.find('video').on('loadedmetadata', mediaLoadEvent);
 
 		var headlines = this.element.find('h1,h2,h3,h4,h5,h6');
 		if (! this.data.name && headlines.length) {
@@ -114,14 +162,14 @@ Rst.Slide = (function() {
 		if (x && ! y) {
 			this.slider.modify(this.element, {width: x, height: ''});
 			this.resetScaledContent();
-			if (ret) {
+			if (ret || this.backgrounds.length) {
 				y = this.element.height();
 			}
 		}
 		else if (y && ! x) {
 			this.slider.modify(this.element, {height: y, width: ''});
 			this.resetScaledContent();
-			if (ret) {
+			if (ret || this.backgrounds.length) {
 				x = this.element.width();
 			}
 		}
@@ -129,10 +177,13 @@ Rst.Slide = (function() {
 			this.slider.modify(this.element, {width: x, height: y});
 			this.scaleContent(x, y);
 		}
-		else if(ret) {
+		else {
+			this.resetScaledContent();
 			x = this.element.width();
 			y = this.element.height();
 		}
+
+		this.scaleBackground(x, y);
 
 		return {
 			x: x,
@@ -146,59 +197,113 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.scaleContent = function(x, y) {
 
-		var originalSize, originalProp, newProp, css;
-		var image = this.element.find('img').first();
-		var scaleMode = this.slider.options.scaleMode;
+		var self = this;
+		var image = this.element.find('img').last();
 
 		if (this.type === 'image' || this.type === 'video') {
 
-			image.css(css = {
-				width: 'auto',
-				'max-width': 'none',
-				'min-width': 0,
-				height: 'auto',
-				'max-height': 'none',
-				'min-height': 0,
-				'margin-left': 0,
-				'margin-top': 0
-			});
-			css['max-width'] = css['min-width'] = '';
-			css['max-height'] = css['min-height'] = '';
-
-			originalSize = {
-				x: image.width(),
-				y: image.height()
-			};
-			originalProp = originalSize.x / originalSize.y;
-			newProp = x / y;
-
-			if (scaleMode === 'fit' || scaleMode === 'crop') {
-
-				if (
-					(originalProp >= newProp && scaleMode === 'fit') ||
-					(originalProp <= newProp && scaleMode === 'crop')
-				) {
-					css.width = x;
-					css.height = x / originalProp;
-					css['margin-top'] = (y - css.height) / 2;
-				}
-				else {
-					css.width = y * originalProp;
-					css.height = y;
-					css['margin-left'] = (x - css.width) / 2;
-				}
-
-			}
-			else if (scaleMode === 'scale') {
-
-				css.width = x;
-				css.height = y;
-
-			}
-
-			image.css(css);
+			this.scaleImage(image, x, y);
 
 		}
+
+	};
+
+	/**
+	 * scale slide backgrounds based on width and height
+	 */
+	Slide.prototype.scaleBackground = function(x, y) {
+
+		var self = this;
+
+		this.backgrounds.each(function() {
+			self.scaleImage($(this), x, y);
+		});
+
+	};
+
+
+	/**
+	 * scale an image element based on width, height and scaleMode
+	 */
+	Slide.prototype.scaleImage = function(image, x, y) {
+
+		var scaleMode = image.attr('data-rsts-scale-mode')
+			|| this.slider.options.scaleMode;
+		var originalSize = this.getOriginalSize(image);
+		var originalProp = originalSize.x / originalSize.y;
+		var newProp = x / y;
+
+		var css = {
+			width: originalSize.x,
+			height: originalSize.y,
+			'margin-left': 0,
+			'margin-top': 0
+		};
+
+		if (scaleMode === 'fit' || scaleMode === 'crop') {
+
+			if (
+				(originalProp >= newProp && scaleMode === 'fit') ||
+				(originalProp <= newProp && scaleMode === 'crop')
+			) {
+				css.width = x;
+				css.height = x / originalProp;
+				css['margin-top'] = (y - css.height) / 2;
+			}
+			else {
+				css.width = y * originalProp;
+				css.height = y;
+				css['margin-left'] = (x - css.width) / 2;
+			}
+
+		}
+		else if (scaleMode === 'scale') {
+
+			css.width = x;
+			css.height = y;
+
+		}
+		else {
+
+			css['margin-top'] = (y - originalSize.y) / 2;
+			css['margin-left'] = (x - originalSize.x) / 2;
+
+		}
+
+		image.css(css);
+
+	};
+
+	Slide.prototype.getOriginalSize = function(element) {
+
+		element = $(element);
+		var size = {};
+
+		if (element[0].nodeName === 'IMG') {
+
+			if ('naturalWidth' in new Image()) {
+				size.x = element[0].naturalWidth;
+				size.y = element[0].naturalHeight;
+			}
+			else {
+				var img = new Image();
+				img.src = element[0].src;
+				size.x = img.width;
+				size.y = img.height;
+			}
+
+		}
+		else if (element[0].nodeName === 'VIDEO') {
+
+			size.x = element[0].videoWidth;
+			size.y = element[0].videoHeight;
+
+		}
+
+		return {
+			x: size.x || 10,
+			y: size.y || 10
+		};
 
 	};
 
@@ -207,16 +312,12 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.resetScaledContent = function(x, y) {
 
-		var image = this.element.find('img').first();
+		var image = this.element.find('img').last();
 
 		if (this.type === 'image' || this.type === 'video') {
 			image.css({
 				width: '',
-				'max-width': '',
-				'min-width': '',
 				height: '',
-				'max-height': '',
-				'min-height': '',
 				'margin-left': '',
 				'margin-top': ''
 			});
@@ -247,14 +348,22 @@ Rst.Slide = (function() {
 			this.startVideo();
 		}
 
-		if (state === 'active' && state !== this.state) {
+		// Preactive is needed for iOS because it requires user interaction
+		if (
+			(state === 'preactive' || state === 'active')
+			&& state !== this.state
+		) {
 			this.element.find('video[autoplay]').each(function() {
 				if (this.play) {
 					this.play();
 				}
 			});
 		}
-		else if (state !== 'active' && this.state === 'active') {
+		else if (
+			state !== 'active'
+			&& state !== 'preactive'
+			&& (this.state === 'active' || this.state === 'preactive')
+		) {
 			this.element.find('video').each(function() {
 				if (this.pause) {
 					this.pause();
