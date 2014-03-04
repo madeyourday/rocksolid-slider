@@ -306,9 +306,11 @@ Rst.Slider = (function() {
 			this.slides[index].setState('preactive');
 		}
 
-		var slideWidth = this.getViewSizeFixed(true)[this.options.direction]
+		var slideWidth = Math.round(
+			this.getViewSizeFixed(true)[this.options.direction]
 			* this.options.visibleArea
-			+ this.getGapSize();
+			+ this.getGapSize()
+		);
 
 		if (loop) {
 			this.activeSlideOffset += slideWidth * loop;
@@ -352,7 +354,10 @@ Rst.Slider = (function() {
 		var size = this.getViewSize(index);
 		var durationScale;
 		var targetPos = - this.getSlideOffset(index)
-			+ (size[this.options.direction] * (1 - this.options.visibleArea) / 2);
+			+ Math.round(
+				size[this.options.direction]
+				* (1 - this.options.visibleArea) / 2
+			);
 
 		if (fromDrag && !overflow) {
 			durationScale = Math.abs((
@@ -930,7 +935,7 @@ Rst.Slider = (function() {
 		var size = this.getViewSizeFixed(true);
 
 		return (index - this.slideIndex)
-			* (size[this.options.direction] * this.options.visibleArea + this.getGapSize())
+			* Math.round(size[this.options.direction] * this.options.visibleArea + this.getGapSize())
 			+ this.activeSlideOffset;
 	};
 
@@ -997,11 +1002,13 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getViewSize = function(slideIndex) {
 
-		var size;
 		slideIndex = slideIndex || 0;
 
-		size = this.getViewSizeFixed();
-		size[this.options.direction] *= this.options.visibleArea;
+		var size = this.getViewSizeFixed();
+		var backupSize = size[this.options.direction];
+		size[this.options.direction] = Math.round(
+			size[this.options.direction] * this.options.visibleArea
+		);
 
 		if (! size.x || ! size.y) {
 			// calculate the missing dimension
@@ -1016,7 +1023,7 @@ Rst.Slider = (function() {
 
 		this.slideSize = size[this.options.direction];
 
-		size[this.options.direction] /= this.options.visibleArea;
+		size[this.options.direction] = backupSize;
 
 		return size;
 
@@ -1033,7 +1040,7 @@ Rst.Slider = (function() {
 				* this.getViewSizeFixed(true)[this.options.direction] / 100;
 		}
 
-		return parseFloat(size) || 0;
+		return Math.round(parseFloat(size)) || 0;
 
 	};
 
@@ -1043,7 +1050,7 @@ Rst.Slider = (function() {
 	Slider.prototype.resize = function() {
 
 		var self = this;
-		var size, width, height;
+		var width, height;
 
 		// Check if the CSS height value has changed to "auto" or vice versa
 		if (this.options.direction === 'x' && this.options.height === 'css') {
@@ -1073,7 +1080,7 @@ Rst.Slider = (function() {
 			this.playAutoplay();
 		}
 
-		size = this.getViewSize(this.slideIndex);
+		var size = this.getViewSize(this.slideIndex);
 		this.modify(this.elements.crop, {
 			width: size.x,
 			height: size.y
@@ -1082,23 +1089,26 @@ Rst.Slider = (function() {
 		if (this.elements.overlayPrev && this.elements.overlayNext) {
 			if (this.options.direction === 'x') {
 				this.modify(this.elements.overlayPrev, {
-					width: size.x * (1 - this.options.visibleArea) / 2
+					width: Math.round(size.x * (1 - this.options.visibleArea) / 2)
 				});
 				this.modify(this.elements.overlayNext, {
-					width: size.x * (1 - this.options.visibleArea) / 2
+					width: Math.round(size.x * (1 - this.options.visibleArea) / 2)
 				});
 			}
 			else {
 				this.modify(this.elements.overlayPrev, {
-					height: size.y * (1 - this.options.visibleArea) / 2
+					height: Math.round(size.y * (1 - this.options.visibleArea) / 2)
 				});
 				this.modify(this.elements.overlayNext, {
-					height: size.y * (1 - this.options.visibleArea) / 2
+					height: Math.round(size.y * (1 - this.options.visibleArea) / 2)
 				});
 			}
 		}
 
-		size[this.options.direction] *= this.options.visibleArea;
+		var backupSize = size[this.options.direction];
+		size[this.options.direction] = Math.round(
+			size[this.options.direction] * this.options.visibleArea
+		);
 
 		if (!this.autoSize || this.options.direction === 'x') {
 			width = size.x;
@@ -1123,9 +1133,8 @@ Rst.Slider = (function() {
 		if (this.options.type === 'slide') {
 			this.modify(this.elements.slides, {
 				offset: -self.getSlideOffset(this.slideIndex)
-					+ (
-						size[this.options.direction]
-						/ this.options.visibleArea
+					+ Math.round(
+						backupSize
 						* (1 - this.options.visibleArea)
 						/ 2
 					)
