@@ -20,16 +20,29 @@ Rst.Slide = (function() {
 
 		this.slider = slider;
 
-		var $element = $(element);
+		this.content = $(element);
 
 		this.data = {
-			name: $element.attr('data-rsts-name') || $element.attr('title')
+			name: this.content.attr('data-rsts-name') || this.content.attr('title')
 		};
 
 		if (element.nodeName === 'IMG') {
 			this.type = 'image';
 		}
-		this.type = $element.attr('data-rsts-type') || this.type || 'default';
+		this.type = this.content.attr('data-rsts-type') || this.type || 'default';
+
+		this.centerContent =
+			this.content.attr('data-rsts-center') !== undefined
+			? this.content.attr('data-rsts-center')
+			: slider.options.centerContent;
+
+		if (this.centerContent !== 'x' && this.centerContent !== 'y') {
+			this.centerContent = !!this.centerContent;
+		}
+
+		if (this.type === 'image' || this.type === 'video') {
+			this.centerContent = false;
+		}
 
 		this.element = $(document.createElement('div'))
 			.addClass(slider.options.cssPrefix + 'slide')
@@ -118,7 +131,7 @@ Rst.Slide = (function() {
 
 		if (this.type === 'video') {
 
-			this.data.video = $element.attr('data-rsts-video');
+			this.data.video = this.content.attr('data-rsts-video');
 			$(document.createElement('a'))
 				.attr('href', this.data.video)
 				.text('play')
@@ -159,6 +172,8 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.size = function(x, y, ret) {
 
+		var autoSize = !x || !y;
+
 		if (x && ! y) {
 			this.slider.modify(this.element, {width: x, height: ''});
 			this.resetScaledContent();
@@ -175,7 +190,6 @@ Rst.Slide = (function() {
 		}
 		else if (x && y) {
 			this.slider.modify(this.element, {width: x, height: y});
-			this.scaleContent(x, y);
 		}
 		else {
 			this.resetScaledContent();
@@ -183,6 +197,7 @@ Rst.Slide = (function() {
 			y = this.element.height();
 		}
 
+		this.scaleContent(x, y, autoSize);
 		this.scaleBackground(x, y);
 
 		return {
@@ -195,15 +210,28 @@ Rst.Slide = (function() {
 	/**
 	 * scale slide contents based on width and height
 	 */
-	Slide.prototype.scaleContent = function(x, y) {
+	Slide.prototype.scaleContent = function(x, y, autoSize) {
 
-		var self = this;
-		var image = this.element.find('img').last();
+		if (this.centerContent) {
+			if (this.content.css('display') === 'inline') {
+				this.content.css('display', 'inline-block');
+			}
+			if (this.centerContent !== 'y' && x) {
+				this.content.css(
+					'margin-left',
+					Math.round((x - this.content.width()) / 2)
+				);
+			}
+			if (this.centerContent !== 'x' && y) {
+				this.content.css(
+					'margin-top',
+					Math.round((y - this.content.height()) / 2)
+				);
+			}
+		}
 
-		if (this.type === 'image' || this.type === 'video') {
-
-			this.scaleImage(image, x, y);
-
+		if (!autoSize && (this.type === 'image' || this.type === 'video')) {
+			this.scaleImage(this.element.find('img').last(), x, y);
 		}
 
 	};
@@ -318,6 +346,13 @@ Rst.Slide = (function() {
 			image.css({
 				width: '',
 				height: '',
+				'margin-left': '',
+				'margin-top': ''
+			});
+		}
+
+		if (this.centerContent) {
+			this.content.css({
 				'margin-left': '',
 				'margin-top': ''
 			});

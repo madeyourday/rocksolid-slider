@@ -234,6 +234,9 @@ Rst.Slider = (function() {
 		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 2,
+		// true, "x" or "y" to center the the slides content
+		// use the attribute data-rsts-center to set the mode per slide
+		centerContent: false,
 		// gap between the slides in pixels or as string in percent
 		gapSize: 20,
 		// duration of the slide animation in milliseconds
@@ -803,7 +806,9 @@ Rst.Slider = (function() {
 			);
 		}
 		var size = this.getViewSizeFixed();
-		size[this.options.direction] *= this.options.visibleArea;
+		size[this.options.direction] = Math.round(
+			size[this.options.direction] * this.options.visibleArea
+		);
 
 		for (var slide, key, i = slideIndex - preloadCount; i <= slideIndex + preloadCount; i++) {
 
