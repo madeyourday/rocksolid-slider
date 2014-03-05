@@ -19,7 +19,6 @@ Rst.SliderNav = (function() {
 		var self = this;
 
 		this.slider = slider;
-		this.activeIndex = null;
 		this.elements = {};
 
 		if (slider.options.controls) {
@@ -97,21 +96,28 @@ Rst.SliderNav = (function() {
 	}
 
 	/**
-	 * set active nav element
+	 * set active nav elements
 	 */
-	SliderNav.prototype.setActive = function(index) {
+	SliderNav.prototype.setActive = function(indexes) {
 
-		if (
-			typeof this.activeIndex === 'number'
-			&& this.elements[this.activeIndex]
-		) {
-			this.elements[this.activeIndex].children('a').removeClass('active');
+		var self = this;
+
+		if (this.activeIndexes) {
+			$.each(this.activeIndexes, function(i, index) {
+				if (!self.elements[index]) {
+					return;
+				}
+				self.elements[index].children('a').removeClass('active');
+			});
 		}
 
-		this.activeIndex = index;
-		if (this.elements[this.activeIndex]) {
-			this.elements[this.activeIndex].children('a').addClass('active');
-		}
+		this.activeIndexes = indexes;
+		$.each(this.activeIndexes, function(i, index) {
+			if (!self.elements[index]) {
+				return;
+			}
+			self.elements[index].children('a').addClass('active');
+		});
 
 	};
 
@@ -133,7 +139,25 @@ Rst.SliderNav = (function() {
 				)
 				.on('click', function(event){
 					event.preventDefault();
-					self.slider.goTo(index);
+					var visibleCount = self.slider.getVisibleSlidesCount();
+					var goTo = index - Math.floor(
+						(visibleCount - 1) / 2
+					);
+					if (!self.slider.options.loop) {
+						goTo = Math.min(
+							self.slider.slides.length - visibleCount,
+							Math.max(0, goTo)
+						);
+					}
+					else {
+						if (goTo < 0) {
+							goTo += self.slider.slides.length;
+						}
+						else if (goTo >= self.slider.slides.length) {
+							goTo -= self.slider.slides.length;
+						}
+					}
+					self.slider.goTo(goTo);
 				})
 			);
 

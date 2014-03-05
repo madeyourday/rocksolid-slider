@@ -31,6 +31,8 @@ Rst.Slider = (function() {
 
 		if (this.options.type !== 'slide') {
 			this.options.visibleArea = 1;
+			this.options.slideMaxCount = 0;
+			this.options.slideMinWidth = 0;
 		}
 
 		this.checkCss3Support();
@@ -53,8 +55,6 @@ Rst.Slider = (function() {
 				self.goTo(index);
 			}
 		});
-
-		this.slides[this.slideIndex].setState('active');
 
 		this.elements.main
 			.addClass(this.options.cssPrefix + 'main')
@@ -136,7 +136,6 @@ Rst.Slider = (function() {
 		}
 
 		this.nav = new Rst.SliderNav(this);
-		this.nav.setActive(this.slideIndex);
 
 		if (this.elements.footer) {
 			this.elements.footer
@@ -145,6 +144,8 @@ Rst.Slider = (function() {
 		}
 
 		this.preloadSlides(this.slideIndex);
+		// Sets active states
+		this.cleanupSlides();
 		$(window).on('resize.rsts', function(){
 			self.resize();
 		});
@@ -234,6 +235,10 @@ Rst.Slider = (function() {
 		height: 'css',
 		// number of slides to preload (to the left/right or top/bottom)
 		preloadSlides: 2,
+		// maximum number of visible slides
+		slideMaxCount: 0,
+		// minimal with of one slide
+		slideMinWidth: 0,
 		// true, "x" or "y" to center the the slides content
 		// use the attribute data-rsts-center to set the mode per slide
 		centerContent: false,
@@ -274,47 +279,73 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.goTo = function(index, fromDrag, fromAutoplay) {
 
+		var self = this;
+
 		if (! fromAutoplay) {
 			this.stopAutoplay();
 		}
+
+		var visibleCount = this.getVisibleSlidesCount();
 
 		var overflow = false;
 		var loop = 0;
 		var oldIndex = this.slideIndex;
 
-		if (index < 0 || index > this.slides.length - 1) {
-			if (this.options.loop) {
-				loop = index - this.slideIndex;
-				while (index < 0) {
-					index += this.slides.length;
-				}
-				while (index > this.slides.length - 1) {
-					index -= this.slides.length;
-				}
+		if (
+			(index < 0 || index > this.slides.length - 1)
+			&& this.options.loop
+		) {
+			loop = index - this.slideIndex;
+			while (index < 0) {
+				index += this.slides.length;
 			}
-			else {
-				if (this.options.type === 'fade') {
-					return;
-				}
-				overflow = index < 0 ? -1 : 1;
-				index = index < 0 ? 0 : this.slides.length - 1;
+			while (index > this.slides.length - 1) {
+				index -= this.slides.length;
 			}
+		}
+		else if (
+			(index < 0 || index > this.slides.length - visibleCount)
+			&& !this.options.loop
+		) {
+			if (this.options.type === 'fade') {
+				return;
+			}
+			overflow = index < 0 ? -1 : 1;
+			index = index < 0 ? 0 : this.slides.length - visibleCount;
 		}
 
 		if (! overflow && this.slideIndex === index && ! fromDrag) {
 			return;
 		}
 
-		if (this.slideIndex !== index) {
-			this.slides[this.slideIndex].setState('postactive');
-			this.slides[index].setState('preactive');
+		var activeSlidesBefore = [];
+		for (var i = this.slideIndex; i <= this.slideIndex + visibleCount - 1; i++) {
+			activeSlidesBefore.push(i >= this.slides.length
+				? i - this.slides.length
+				: i
+			);
 		}
 
-		var slideWidth = Math.round(
-			this.getViewSizeFixed(true)[this.options.direction]
-			* this.options.visibleArea
-			+ this.getGapSize()
-		);
+		var activeSlides = [];
+		for (i = index; i <= index + visibleCount - 1; i++) {
+			activeSlides.push(i >= this.slides.length
+				? i - this.slides.length
+				: i
+			);
+		}
+
+		$.each(activeSlidesBefore, function(i, slideIndex) {
+			if ($.inArray(slideIndex, activeSlides) === -1) {
+				self.slides[slideIndex].setState('postactive');
+			}
+		});
+		$.each(activeSlides, function(i, slideIndex) {
+			if ($.inArray(slideIndex, activeSlidesBefore) === -1) {
+				self.slides[slideIndex].setState('preactive');
+			}
+		});
+
+		var slideWidth = this.slideSize + this.getGapSize();
 
 		if (loop) {
 			this.activeSlideOffset += slideWidth * loop;
@@ -322,16 +353,16 @@ Rst.Slider = (function() {
 		else {
 			if (
 				index > this.slideIndex
-				&& index - this.slideIndex - 1 > this.options.preloadSlides * 2
+				&& index - this.slideIndex - visibleCount > this.options.preloadSlides * 2
 			) {
-				this.activeSlideOffset += (this.options.preloadSlides * 2 + 1)
+				this.activeSlideOffset += (this.options.preloadSlides * 2 + visibleCount)
 					* slideWidth;
 			}
 			else if (
 				index < this.slideIndex
-				&& this.slideIndex - index - 1 > this.options.preloadSlides * 2
+				&& this.slideIndex - index - visibleCount > this.options.preloadSlides * 2
 			) {
-				this.activeSlideOffset -= (this.options.preloadSlides * 2 + 1)
+				this.activeSlideOffset -= (this.options.preloadSlides * 2 + visibleCount)
 					* slideWidth;
 			}
 			else {
@@ -341,13 +372,24 @@ Rst.Slider = (function() {
 
 		this.slideIndex = index;
 
-		if (
-			fromDrag &&
-			this.slides[index].isInjected() &&
-			Math.round(this.slides[index].element.position()[
-				{x: 'left', y: 'top'}[this.options.direction]
-			]) === Math.round(this.getSlideOffset(index))
-		) {
+		var preloadOnCleanup = true;
+		if (!fromDrag) {
+			preloadOnCleanup = false;
+		}
+		else {
+			$.each(activeSlides, function(i, slideIndex) {
+				if (
+					!self.slides[slideIndex].isInjected()
+					|| Math.round(self.slides[slideIndex].element.position()[
+						{x: 'left', y: 'top'}[self.options.direction]
+					]) !== Math.round(self.getSlideOffset(self.slideIndex + i))
+				) {
+					preloadOnCleanup = false;
+					return false;
+				}
+			});
+		}
+		if (preloadOnCleanup) {
 			// performance optimization
 			this.preloadOnCleanup = true;
 		}
@@ -654,7 +696,8 @@ Rst.Slider = (function() {
 
 			if (animate && bounce) {
 				origOffset = css.offset;
-				css.offset += this.slideSize * 0.075 * - bounce;
+				css.offset += this.getViewSizeFixed(true)[this.options.direction]
+					* 0.075 * - bounce;
 				durationScale *= 0.5;
 			}
 
@@ -798,19 +841,29 @@ Rst.Slider = (function() {
 	Slider.prototype.preloadSlides = function(slideIndex, oldIndex) {
 
 		var self = this;
+
+		var size = this.getViewSizeFixed();
+		size[this.options.direction] = this.slideSize;
+
+		var visibleCount = this.getVisibleSlidesCount();
 		var preloadCount = 0;
 		if (this.options.type === 'slide') {
 			preloadCount = Math.min(
-				Math.floor((this.slides.length - 1) / 2),
+				Math.floor((this.slides.length - visibleCount) / 2),
 				this.options.preloadSlides
 			);
 		}
-		var size = this.getViewSizeFixed();
-		size[this.options.direction] = Math.round(
-			size[this.options.direction] * this.options.visibleArea
-		);
 
-		for (var slide, key, i = slideIndex - preloadCount; i <= slideIndex + preloadCount; i++) {
+		var activeSlides = [];
+		for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
+			activeSlides.push(i >= this.slides.length
+				? i - this.slides.length
+				: i
+			);
+		}
+
+		var slide, key;
+		for (i = slideIndex - preloadCount; i <= slideIndex + preloadCount + visibleCount - 1; i++) {
 
 			key = i < 0
 				? i + this.slides.length
@@ -826,7 +879,7 @@ Rst.Slider = (function() {
 				}
 				if (
 					oldIndex !== undefined
-					&& key !== slideIndex
+					&& $.inArray(key, activeSlides) === -1
 					&& (i < 0 || i >= this.slides.length)
 					&& slide.isInjected()
 				) {
@@ -874,15 +927,23 @@ Rst.Slider = (function() {
 		clearTimeout(this.cleanupSlidesTimeout);
 
 		var self = this;
+		var visibleCount = this.getVisibleSlidesCount();
 		var preloadCount = this.options.type === 'slide' ?
 			this.options.preloadSlides :
 			0;
 		var keepSlides = [];
+		var activeSlides = [];
 
-		for (var i = this.slideIndex - preloadCount; i <= this.slideIndex + preloadCount; i++) {
+		for (var i = this.slideIndex - preloadCount; i <= this.slideIndex + preloadCount + visibleCount - 1; i++) {
 			keepSlides.push(i < 0
 				? i + this.slides.length
 				: i >= this.slides.length
+				? i - this.slides.length
+				: i
+			);
+		}
+		for (i = this.slideIndex; i <= this.slideIndex + visibleCount - 1; i++) {
+			activeSlides.push(i >= this.slides.length
 				? i - this.slides.length
 				: i
 			);
@@ -898,13 +959,15 @@ Rst.Slider = (function() {
 				}
 				slide.element.detach();
 			}
-			if (i !== self.slideIndex && slide.state !== 'inactive') {
+			if ($.inArray(i, activeSlides) === -1 && slide.state !== 'inactive') {
 				slide.setState('inactive');
 			}
 		});
 
-		this.nav.setActive(this.slideIndex);
-		this.slides[this.slideIndex].setState('active');
+		this.nav.setActive(activeSlides);
+		$.each(activeSlides, function(i, slideIndex) {
+			self.slides[slideIndex].setState('active');
+		});
 
 		if (this.options.deepLinkPrefix && this.getIndexFromUrl() !== this.slideIndex) {
 			if (this.slideIndex) {
@@ -947,8 +1010,34 @@ Rst.Slider = (function() {
 		var size = this.getViewSizeFixed(true);
 
 		return (index - this.slideIndex)
-			* Math.round(size[this.options.direction] * this.options.visibleArea + this.getGapSize())
+			* (this.slideSize + this.getGapSize())
 			+ this.activeSlideOffset;
+	};
+
+	/**
+	 * Returns the calculated number of visible slides
+	 *
+	 * @return number calculated number of visible slides
+	 */
+	Slider.prototype.getVisibleSlidesCount = function() {
+
+		if (!this.options.slideMaxCount && !this.options.slideMinWidth) {
+			return 1;
+		}
+
+		var size = Math.round(
+			this.getViewSizeFixed(true)[this.options.direction]
+			* this.options.visibleArea
+		);
+		var gapSize = this.getGapSize();
+		var count = this.options.slideMaxCount;
+
+		if (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinWidth) {
+			count = Math.floor((size + gapSize) / (this.options.slideMinWidth + gapSize));
+		}
+
+		return Math.min(this.slides.length, Math.max(1, count));
+
 	};
 
 	/**
@@ -1003,6 +1092,15 @@ Rst.Slider = (function() {
 
 		this.viewSizeFixedCache = {x: x, y: y};
 
+		var gapSize = this.getGapSize();
+		var visibleCount = this.getVisibleSlidesCount();
+		this.slideSize = Math.round(
+			(
+				((this.options.direction === 'x' ? x : y) * this.options.visibleArea)
+				- (gapSize * (visibleCount - 1))
+			) / visibleCount
+		);
+
 		// Return a copy of the object
 		return $.extend({}, this.viewSizeFixedCache);
 
@@ -1018,22 +1116,25 @@ Rst.Slider = (function() {
 
 		var size = this.getViewSizeFixed();
 		var backupSize = size[this.options.direction];
-		size[this.options.direction] = Math.round(
-			size[this.options.direction] * this.options.visibleArea
-		);
+		size[this.options.direction] = this.slideSize;
 
-		if (! size.x || ! size.y) {
-			// calculate the missing dimension
-			size = this.slides[slideIndex].size(size.x, size.y, true);
-			if (size.x < 10) {
-				size.x = 10;
+		// calculate the missing dimension
+		if (!size.x || !size.y) {
+
+			var visibleCount = this.getVisibleSlidesCount();
+			var missingDimension = !size.x ? 'x' : 'y';
+			var key, slideSize, newSize;
+			for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
+				key = i >= this.slides.length
+					? i - this.slides.length
+					: i;
+				slideSize = this.slides[key].size(size.x, size.y, true);
+				newSize = Math.max(newSize || 0, slideSize[missingDimension]);
 			}
-			if (size.y < 10) {
-				size.y = 10;
-			}
+
+			size[missingDimension] = Math.max(10, newSize || 0);
+
 		}
-
-		this.slideSize = size[this.options.direction];
 
 		size[this.options.direction] = backupSize;
 
@@ -1062,6 +1163,7 @@ Rst.Slider = (function() {
 	Slider.prototype.resize = function() {
 
 		var self = this;
+		var visibleCountBefore = this.getVisibleSlidesCount();
 		var width, height;
 
 		// Check if the CSS height value has changed to "auto" or vice versa
@@ -1118,9 +1220,7 @@ Rst.Slider = (function() {
 		}
 
 		var backupSize = size[this.options.direction];
-		size[this.options.direction] = Math.round(
-			size[this.options.direction] * this.options.visibleArea
-		);
+		size[this.options.direction] = this.slideSize;
 
 		if (!this.autoSize || this.options.direction === 'x') {
 			width = size.x;
@@ -1151,6 +1251,11 @@ Rst.Slider = (function() {
 						/ 2
 					)
 			});
+		}
+
+		if (visibleCountBefore !== this.getVisibleSlidesCount()) {
+			// Sets active states
+			this.cleanupSlides();
 		}
 
 	};
@@ -1387,6 +1492,7 @@ Rst.Slider = (function() {
 			pos[this.options.direction] -
 			this.dragStartPos[this.options.direction];
 
+		var visibleCount = this.getVisibleSlidesCount();
 		if (!this.options.loop) {
 			if (slidesPos > - this.getSlideOffset(0) + (
 				this.getViewSizeFixed(true)[this.options.direction]
@@ -1399,12 +1505,12 @@ Rst.Slider = (function() {
 					)) * 0.6
 				);
 			}
-			if (slidesPos < - this.getSlideOffset(this.slides.length - 1) + (
+			if (slidesPos < - this.getSlideOffset(this.slides.length - visibleCount) + (
 				this.getViewSizeFixed(true)[this.options.direction]
 				* (1 - this.options.visibleArea) / 2
 			)) {
 				slidesPos = (slidesPos * 0.4) - (
-					(this.getSlideOffset(this.slides.length - 1) - (
+					(this.getSlideOffset(this.slides.length - visibleCount) - (
 						this.getViewSizeFixed(true)[this.options.direction]
 						* (1 - this.options.visibleArea) / 2
 					)) * 0.6
