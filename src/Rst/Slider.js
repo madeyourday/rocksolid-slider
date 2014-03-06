@@ -197,6 +197,19 @@ Rst.Slider = (function() {
 			});
 		}
 
+		this.isVisible = true;
+		$(document).on('visibilitychange webkitvisibilitychange', function(event) {
+			self.checkVisibility();
+		});
+		var scrollEventTimeout;
+		$(window).on('scroll', function(event) {
+			clearTimeout(scrollEventTimeout);
+			scrollEventTimeout = setTimeout(function() {
+				self.checkVisibility();
+			}, 100);
+		});
+		this.checkVisibility();
+
 		if (this.options.keyboard) {
 			$(document.body).on('keydown.rsts', function(event){
 				var codePrev = self.options.direction === 'x' ? 37 : 38;
@@ -1213,11 +1226,14 @@ Rst.Slider = (function() {
 		var self = this;
 		var visibleCountBefore = this.getVisibleSlidesCount();
 		var width, height;
+		var pauseAutoplay = !this.autoplayPaused;
 
 		// Check if the CSS height value has changed to "auto" or vice versa
 		if (this.options.direction === 'x' && this.options.height === 'css') {
 			// Pause autoplay to freeze the progress bar
-			this.pauseAutoplay();
+			if (pauseAutoplay) {
+				this.pauseAutoplay();
+			}
 			this.elements.view.css({display: 'none'});
 			if (this.nav.elements.main) {
 				this.nav.elements.main.css({display: 'none'});
@@ -1239,7 +1255,9 @@ Rst.Slider = (function() {
 			if (this.elements.footer) {
 				this.elements.footer.css({display: ''});
 			}
-			this.playAutoplay();
+			if (pauseAutoplay) {
+				this.playAutoplay();
+			}
 		}
 
 		var size = this.getViewSize(this.slideIndex);
@@ -1305,6 +1323,41 @@ Rst.Slider = (function() {
 			this.nav.combineItems();
 			// Sets active states
 			this.cleanupSlides();
+		}
+
+		this.checkVisibility();
+
+	};
+
+	/**
+	 * check if the slider is currently visible and pause or start autoplay
+	 */
+	Slider.prototype.checkVisibility = function() {
+
+		var documentVisible = !(document.hidden || document.webkitHidden);
+		var sliderVisible = false;
+		var main = this.elements.main;
+		var offset = main.offset();
+		var $window = $(window);
+
+		if (
+			documentVisible
+			&& offset.left < $window.width() + $window.scrollLeft()
+			&& offset.left + main.outerWidth() > $window.scrollLeft()
+			&& offset.top < $window.height() + $window.scrollTop()
+			&& offset.top + main.outerHeight() > $window.scrollTop()
+		) {
+			sliderVisible = true;
+		}
+
+		if (this.isVisible !== sliderVisible) {
+			this.isVisible = sliderVisible;
+			if (sliderVisible) {
+				this.playAutoplay();
+			}
+			else {
+				this.pauseAutoplay();
+			}
 		}
 
 	};
