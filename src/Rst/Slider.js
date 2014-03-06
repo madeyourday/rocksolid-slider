@@ -32,7 +32,7 @@ Rst.Slider = (function() {
 		if (this.options.type !== 'slide') {
 			this.options.visibleArea = 1;
 			this.options.slideMaxCount = 0;
-			this.options.slideMinWidth = 0;
+			this.options.slideMinSize = 0;
 		}
 
 		this.checkCss3Support();
@@ -237,8 +237,8 @@ Rst.Slider = (function() {
 		preloadSlides: 2,
 		// maximum number of visible slides
 		slideMaxCount: 0,
-		// minimal with of one slide
-		slideMinWidth: 0,
+		// minimal size of one slide in px
+		slideMinSize: 0,
 		// true, "x" or "y" to center the the slides content
 		// use the attribute data-rsts-center to set the mode per slide
 		centerContent: false,
@@ -1021,7 +1021,7 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getVisibleSlidesCount = function() {
 
-		if (!this.options.slideMaxCount && !this.options.slideMinWidth) {
+		if (!this.options.slideMaxCount && !this.options.slideMinSize) {
 			return 1;
 		}
 
@@ -1032,8 +1032,8 @@ Rst.Slider = (function() {
 		var gapSize = this.getGapSize();
 		var count = this.options.slideMaxCount;
 
-		if (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinWidth) {
-			count = Math.floor((size + gapSize) / (this.options.slideMinWidth + gapSize));
+		if (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinSize) {
+			count = Math.floor((size + gapSize) / (this.options.slideMinSize + gapSize));
 		}
 
 		return Math.min(this.slides.length, Math.max(1, count));
