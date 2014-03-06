@@ -101,6 +101,7 @@ Rst.SliderNav = (function() {
 	SliderNav.prototype.setActive = function(indexes) {
 
 		var self = this;
+		var slides = this.slider.getSlides();
 
 		if (this.activeIndexes) {
 			$.each(this.activeIndexes, function(i, index) {
@@ -111,13 +112,89 @@ Rst.SliderNav = (function() {
 			});
 		}
 
+		if (
+			this.elements[slides.length]
+			&& $.inArray(slides.length - 1, indexes) !== -1
+		) {
+			indexes = [slides.length];
+		}
+
 		this.activeIndexes = indexes;
+
+		var visibleActive = false;
 		$.each(this.activeIndexes, function(i, index) {
 			if (!self.elements[index]) {
 				return;
 			}
+			if (self.elements[index][0].style.display !== 'none') {
+				visibleActive = true;
+			}
 			self.elements[index].children('a').addClass('active');
 		});
+
+		// No visible item is active so we activate the last one
+		if (!visibleActive && this.elements[slides.length]) {
+			$.each(this.activeIndexes, function(i, index) {
+				if (!self.elements[index]) {
+					return;
+				}
+				self.elements[index].children('a').removeClass('active');
+			});
+			this.activeIndexes = [slides.length];
+			this.elements[slides.length].children('a').addClass('active');
+		}
+
+	};
+
+	/**
+	 * combine navigation items
+	 */
+	SliderNav.prototype.combineItems = function() {
+
+		var visibleCount = this.slider.getVisibleSlidesCount();
+		var slides = this.slider.getSlides();
+
+		if (this.elements[slides.length]) {
+			this.elements[slides.length].remove();
+			delete this.elements[slides.length];
+		}
+
+		$.each(this.elements, function() {
+			this.css('display', '');
+		});
+
+		if (visibleCount < 2 || !this.slider.options.combineNavItems) {
+			return;
+		}
+
+		var lastIndex;
+		for (var i = 0; this.elements[i]; i++) {
+			if (
+				(i - Math.floor((visibleCount - 1) / 2)) % visibleCount
+				|| i > slides.length - visibleCount
+			) {
+				this.elements[i].css('display', 'none');
+			}
+			else {
+				lastIndex = i;
+			}
+		}
+
+		if (slides.length % visibleCount === 0) {
+			this.elements[
+				slides.length - visibleCount
+				+ Math.floor((visibleCount - 1) / 2)
+			].css('display', '');
+		}
+		else {
+			var newIndex = slides.length
+				- (slides.length % visibleCount || visibleCount)
+				+ Math.floor((visibleCount - 1) / 2);
+			this.elements[slides.length] = this.createNavItem(
+				newIndex,
+				slides[newIndex >= slides.length ? slides.length - 1 : newIndex].getData()
+			).insertAfter(this.elements[slides.length - 1]);
+		}
 
 	};
 
@@ -135,7 +212,7 @@ Rst.SliderNav = (function() {
 				.attr('href', '')
 				.text((self.slider.options.navType !== 'numbers' && data.name) ?
 					data.name :
-					(index + 1)
+					(data.index + 1)
 				)
 				.on('click', function(event){
 					event.preventDefault();

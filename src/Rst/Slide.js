@@ -574,6 +574,13 @@ Rst.Slide = (function() {
 	};
 
 	/**
+	 * Set index
+	 */
+	Slide.prototype.setIndex = function(index) {
+		this.data.index = index;
+	};
+
+	/**
 	 * @return object {}
 	 */
 	Slide.prototype.getData = function() {

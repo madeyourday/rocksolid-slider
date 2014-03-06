@@ -44,6 +44,10 @@ Rst.Slider = (function() {
 			});
 		}
 
+		$.each(this.slides, function(index) {
+			this.setIndex(index);
+		});
+
 		this.slideIndex = this.getIndexFromUrl();
 		if (this.slideIndex === false) {
 			this.slideIndex = 0;
@@ -151,6 +155,8 @@ Rst.Slider = (function() {
 		});
 		this.resize();
 
+		this.nav.combineItems();
+
 		if (this.options.type === 'slide') {
 			this.setDragEvents();
 		}
@@ -199,7 +205,12 @@ Rst.Slider = (function() {
 					event.target === document.body ||
 					$(event.target).closest(self.elements.main).length
 				)) {
-					self.goTo(self.slideIndex + (event.which === codePrev ? -1 : 1));
+					if (event.which === codePrev) {
+						self.prev();
+					}
+					else {
+						self.next();
+					}
 				}
 			});
 		}
@@ -226,7 +237,7 @@ Rst.Slider = (function() {
 		skin: 'default',
 		// set width and height to one of the following values
 		// - "css": get the size from the applied css (default)
-		// - a css lenght value: e.g. "100%", "500px", "50em"
+		// - a css length value: e.g. "100%", "500px", "50em"
 		// - "auto": get the size from the active slide dimensions at runtime
 		//   height can be set to auto only if the direction is "x"
 		// - a proportion: keep a fixed proportion for the slides, e.g. "480x270"
@@ -239,6 +250,10 @@ Rst.Slider = (function() {
 		slideMaxCount: 0,
 		// minimal size of one slide in px
 		slideMinSize: 0,
+		// combine navigation items if multiple slides are visible (default true)
+		combineNavItems: true,
+		// number of slides to navigate by clicking prev or next
+		prevNextSteps: 0,
 		// true, "x" or "y" to center the the slides content
 		// use the attribute data-rsts-center to set the mode per slide
 		centerContent: false,
@@ -556,9 +571,18 @@ Rst.Slider = (function() {
 		this.startAutoplayProgressBar(duration);
 
 		var intervalFunction = function() {
-			var index = self.slideIndex + 1;
-			if (index > self.slides.length - 1 && !self.options.loop) {
-				index = 0;
+			var visibleCount = self.getVisibleSlidesCount();
+			var index = self.slideIndex + (
+				Math.min(self.options.prevNextSteps, visibleCount)
+				|| visibleCount
+			);
+			if (index > self.slides.length - visibleCount && !self.options.loop) {
+				if (self.slideIndex < self.slides.length - visibleCount) {
+					index = self.slides.length - visibleCount;
+				}
+				else {
+					index = 0;
+				}
 			}
 			self.goTo(index, false, true);
 			self.startAutoplayProgressBar();
@@ -790,14 +814,38 @@ Rst.Slider = (function() {
 	 * slides to the next slide
 	 */
 	Slider.prototype.next = function() {
-		this.goTo(this.slideIndex + 1);
+		var visibleCount = this.getVisibleSlidesCount();
+		var newIndex = this.slideIndex + (
+			Math.min(this.options.prevNextSteps, visibleCount)
+			|| visibleCount
+		);
+		if (
+			!this.options.loop
+			&& newIndex > this.slides.length - visibleCount
+			&& this.slideIndex < this.slides.length - visibleCount
+		) {
+			newIndex = this.slides.length - visibleCount;
+		}
+		this.goTo(newIndex);
 	};
 
 	/**
 	 * slides to the previous slide
 	 */
 	Slider.prototype.prev = function() {
-		this.goTo(this.slideIndex - 1);
+		var visibleCount = this.getVisibleSlidesCount();
+		var newIndex = this.slideIndex - (
+			Math.min(this.options.prevNextSteps, visibleCount)
+			|| visibleCount
+		);
+		if (
+			!this.options.loop
+			&& newIndex < 0
+			&& this.slideIndex > 0
+		) {
+			newIndex = 0;
+		}
+		this.goTo(newIndex);
 	};
 
 	/**
@@ -1254,6 +1302,7 @@ Rst.Slider = (function() {
 		}
 
 		if (visibleCountBefore !== this.getVisibleSlidesCount()) {
+			this.nav.combineItems();
 			// Sets active states
 			this.cleanupSlides();
 		}
