@@ -458,6 +458,11 @@ Rst.Slider = (function() {
 			}, true, durationScale, fromDrag);
 		}
 
+		this.elements.main.trigger({
+			type: 'rsts-slidestart',
+			rstSlider: this
+		});
+
 	};
 
 	/**
@@ -1058,6 +1063,11 @@ Rst.Slider = (function() {
 			this.preloadOnCleanup = false;
 			this.preloadSlides(this.slideIndex);
 		}
+
+		this.elements.main.trigger({
+			type: 'rsts-slidestop',
+			rstSlider: this
+		});
 
 	};
 
