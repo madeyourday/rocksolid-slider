@@ -172,7 +172,7 @@ Rst.Slider = (function() {
 						self.options.type === 'slide' &&
 						event.target === self.elements.slides.get(0)
 					) || (
-						self.options.type === 'fade' &&
+						self.options.type !== 'slide' &&
 						event.target.parentNode === self.elements.slides.get(0)
 					)) {
 						self.cleanupSlides();
@@ -234,7 +234,7 @@ Rst.Slider = (function() {
 	 * @var object default options
 	 */
 	Slider.prototype.defaultOptions = {
-		// slider type (slide or fade)
+		// slider type (slide, side-slide, fade or none)
 		type: 'slide',
 		// "x" for horizontal or "y" for vertical
 		direction: 'x',
@@ -318,6 +318,8 @@ Rst.Slider = (function() {
 		var overflow = false;
 		var loop = 0;
 		var oldIndex = this.slideIndex;
+		var direction = index - this.slideIndex < 0 ? -1
+			: index === this.slideIndex ? 0 : 1;
 
 		if (
 			(index < 0 || index > this.slides.length - 1)
@@ -335,7 +337,7 @@ Rst.Slider = (function() {
 			(index < 0 || index > this.slides.length - visibleCount)
 			&& !this.options.loop
 		) {
-			if (this.options.type === 'fade') {
+			if (this.options.type !== 'slide') {
 				return;
 			}
 			overflow = index < 0 ? -1 : 1;
@@ -449,6 +451,17 @@ Rst.Slider = (function() {
 		}
 		else if (this.options.type === 'fade') {
 			this.modify(this.slides[this.slideIndex].element, {opacity: 1}, true);
+		}
+		else if (this.options.type === 'side-slide') {
+			this.modify(this.slides[this.slideIndex].element, {
+				offset: direction * this.slideSize
+			});
+			// get the position to ensure the engine applies the style
+			this.slides[this.slideIndex].element.position();
+			this.modify(this.slides[this.slideIndex].element, {offset: 0}, true);
+		}
+		else {
+			this.modify(this.slides[this.slideIndex].element, {}, true);
 		}
 
 		if (this.autoSize) {
@@ -966,16 +979,18 @@ Rst.Slider = (function() {
 				slide.size(size.x, size.y);
 			}
 			else if (
-				self.options.type === 'fade' &&
+				self.options.type !== 'slide' &&
 				i === self.slideIndex &&
 				slide.element.next().length
 			) {
-				if (slide.element.next().length === 1) {
-					self.modify(slide.element, {opacity: 1 - slide.element.next().css('opacity')});
-					self.modify(slide.element.next(), {opacity: 1});
-				}
-				else {
-					self.modify(slide.element, {opacity: 0});
+				if (self.options.type === 'fade') {
+					if (slide.element.next().length === 1) {
+						self.modify(slide.element, {opacity: 1 - slide.element.next().css('opacity')});
+						self.modify(slide.element.next(), {opacity: 1});
+					}
+					else {
+						self.modify(slide.element, {opacity: 0});
+					}
 				}
 				// Move slide to the last position
 				self.elements.slides.append(slide.element);
@@ -1022,6 +1037,12 @@ Rst.Slider = (function() {
 					self.slides[self.slideIndex].element.css('opacity') < 1
 				) {
 					return;
+				}
+				if (self.options.type === 'side-slide') {
+					var prop = self.options.direction === 'x' ? 'left' : 'top';
+					if (self.slides[self.slideIndex].element.position()[prop] !== 0) {
+						return;
+					}
 				}
 				slide.element.detach();
 			}
