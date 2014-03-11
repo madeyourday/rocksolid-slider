@@ -171,7 +171,7 @@ Rst.SliderNav = (function() {
 		for (var i = 0; this.elements[i]; i++) {
 			if (
 				(i - Math.floor((visibleCount - 1) / 2)) % visibleCount
-				|| i > slides.length - visibleCount
+				|| (i - Math.floor((visibleCount - 1) / 2)) > slides.length - visibleCount
 			) {
 				this.elements[i].css('display', 'none');
 			}
