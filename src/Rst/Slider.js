@@ -293,6 +293,10 @@ Rst.Slider = (function() {
 		// use the attribute data-rsts-scale-mode to set the mode per slide
 		// only works if width and height are not set to "auto"
 		scaleMode: 'fit',
+		// image position (center, top, right, bottom, left, top-left,
+		// top-right, bottom-left, bottom-right)
+		// use the attribute data-rsts-position to set it per slide
+		imagePosition: 'center',
 		// URL hash prefix or false to disable deep linking, e.g. "slider-"
 		deepLinkPrefix: false,
 		// true to enable keyboard arrow navigation

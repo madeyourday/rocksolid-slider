@@ -257,15 +257,15 @@ Rst.Slide = (function() {
 
 		var scaleMode = image.attr('data-rsts-scale-mode')
 			|| this.slider.options.scaleMode;
+		var position = image.attr('data-rsts-position')
+			|| this.slider.options.imagePosition;
 		var originalSize = this.getOriginalSize(image);
 		var originalProp = originalSize.x / originalSize.y;
 		var newProp = x / y;
 
 		var css = {
 			width: originalSize.x,
-			height: originalSize.y,
-			'margin-left': 0,
-			'margin-top': 0
+			height: originalSize.y
 		};
 
 		if (scaleMode === 'fit' || scaleMode === 'crop') {
@@ -276,12 +276,10 @@ Rst.Slide = (function() {
 			) {
 				css.width = x;
 				css.height = x / originalProp;
-				css['margin-top'] = (y - css.height) / 2;
 			}
 			else {
 				css.width = y * originalProp;
 				css.height = y;
-				css['margin-left'] = (x - css.width) / 2;
 			}
 
 		}
@@ -291,11 +289,21 @@ Rst.Slide = (function() {
 			css.height = y;
 
 		}
-		else {
 
-			css['margin-top'] = (y - originalSize.y) / 2;
-			css['margin-left'] = (x - originalSize.x) / 2;
+		css['margin-top'] = (y - css.height) / 2;
+		css['margin-left'] = (x - css.width) / 2;
 
+		if (position === 'top' || position === 'top-left' || position === 'top-right') {
+			css['margin-top'] = 0;
+		}
+		else if (position === 'bottom' || position === 'bottom-left' || position === 'bottom-right') {
+			css['margin-top'] = y - css.height;
+		}
+		if (position === 'left' || position === 'top-left' || position === 'bottom-left') {
+			css['margin-left'] = 0;
+		}
+		else if (position === 'right' || position === 'top-right' || position === 'bottom-right') {
+			css['margin-left'] = x - css.width;
 		}
 
 		image.css(css);
