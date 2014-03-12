@@ -86,6 +86,12 @@ Rst.Slide = (function() {
 			this.element.children().last().css({
 				position: 'relative'
 			});
+			if (this.backgrounds.filter('video').length) {
+				// Fixes bug in Chrome 33 with disappearing elements over videos
+				this.element.children().last().css({
+					'-webkit-transform': 'translateZ(0)'
+				});
+			}
 		}
 
 		this.element.find('video[autoplay]').each(function() {
