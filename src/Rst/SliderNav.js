@@ -151,6 +151,10 @@ Rst.SliderNav = (function() {
 	 */
 	SliderNav.prototype.combineItems = function() {
 
+		if (!this.elements[0]) {
+			return;
+		}
+
 		var visibleCount = this.slider.getVisibleSlidesCount();
 		var slides = this.slider.getSlides();
 
