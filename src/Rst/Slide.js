@@ -399,6 +399,14 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.setState = function(state) {
 
+		// Ensure the preactive state gets applied before the active state
+		// to trigger animation styles
+		if (state === 'active' && state !== this.state && this.state !== 'preactive') {
+			this.setState('preactive');
+			// Get a css value to ensure the engine applies the styles
+			this.element.css('opacity');
+		}
+
 		if (
 			this.type === 'video' &&
 			this.state &&
