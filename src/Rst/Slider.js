@@ -66,11 +66,19 @@ Rst.Slider = (function() {
 			.addClass(this.options.cssPrefix + 'type-' + this.options.type)
 			.addClass(this.options.cssPrefix + 'skin-' + this.options.skin);
 
-		if (this.options.direction === 'x' && (
+		if (this.options.direction === 'x' && this.options.height === 'normalize') {
+			this.normalizeSize = true;
+			this.options.height = 'auto';
+		}
+		else if (this.options.direction === 'x' && (
 			this.options.height === 'auto' ||
 			(this.options.height === 'css' && this.elements.main.height() < 1)
 		)) {
 			this.autoSize = true;
+		}
+		else if (this.options.direction === 'y' && this.options.width === 'normalize') {
+			this.normalizeSize = true;
+			this.options.width = 'auto';
 		}
 		else if (this.options.direction === 'y' && (
 			this.options.width === 'auto' ||
@@ -253,6 +261,7 @@ Rst.Slider = (function() {
 		// - a css length value: e.g. "100%", "500px", "50em"
 		// - "auto": get the size from the active slide dimensions at runtime
 		//   height can be set to auto only if the direction is "x"
+		// - "normalize": similar to auto but uses the size of the largest slide
 		// - a proportion: keep a fixed proportion for the slides, e.g. "480x270"
 		//   this must not set to both dimensions
 		width: 'css',
@@ -1188,6 +1197,12 @@ Rst.Slider = (function() {
 
 		this.viewSizeFixedCache = {x: x, y: y};
 
+		if (this.normalizeSize && this.normalizedSize) {
+			this.viewSizeFixedCache[
+				this.options.direction === 'x' ? 'y' : 'x'
+			] = this.normalizedSize;
+		}
+
 		var gapSize = this.getGapSize();
 		var visibleCount = this.getVisibleSlidesCount();
 		this.slideSize = Math.round(
@@ -1296,6 +1311,29 @@ Rst.Slider = (function() {
 		}
 
 		var size = this.getViewSize(this.slideIndex);
+
+		// Calculate the normalized size of all slides
+		if (this.normalizeSize) {
+			this.normalizedSize = 0;
+			$.each(this.slides, function(i, slide) {
+				var wasInjected = true;
+				if (!slide.isInjected()) {
+					wasInjected = false;
+					self.elements.slides.append(slide.element);
+				}
+				self.normalizedSize = Math.max(self.normalizedSize, slide.size(
+					self.options.direction === 'x' ? self.slideSize : null,
+					self.options.direction === 'y' ? self.slideSize : null,
+					true
+				)[self.options.direction === 'x' ? 'y' : 'x']);
+				if (!wasInjected) {
+					slide.element.detach();
+				}
+			});
+			// Reset the size
+			size = this.getViewSize(this.slideIndex);
+		}
+
 		this.modify(this.elements.crop, {
 			width: size.x,
 			height: size.y
