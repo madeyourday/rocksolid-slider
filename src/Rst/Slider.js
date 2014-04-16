@@ -31,6 +31,7 @@ Rst.Slider = (function() {
 
 		if (this.options.type !== 'slide') {
 			this.options.visibleArea = 1;
+			this.options.visibleAreaMax = 0;
 			this.options.slideMaxCount = 0;
 			this.options.slideMinSize = 0;
 		}
@@ -138,7 +139,7 @@ Rst.Slider = (function() {
 				.appendTo(this.elements.progress);
 		}
 
-		if (this.options.visibleArea < 1) {
+		if (this.options.visibleArea < 1 || this.options.visibleAreaMax) {
 			this.elements.overlayPrev = $(document.createElement('div'))
 				.addClass(this.options.cssPrefix + 'overlay-prev')
 				.appendTo(this.elements.view);
@@ -248,6 +249,8 @@ Rst.Slider = (function() {
 		direction: 'x',
 		// the size of the area for the visible slide (0 = 0%, 1 = 100%)
 		visibleArea: 1,
+		// maximum size of the area for the visible slide in px
+		visibleAreaMax: 0,
 		// if true the slides get shuffled once on initialization
 		random: false,
 		// if true the slider loops infinitely
@@ -445,7 +448,7 @@ Rst.Slider = (function() {
 		var targetPos = - this.getSlideOffset(index)
 			+ Math.round(
 				size[this.options.direction]
-				* (1 - this.options.visibleArea) / 2
+				* (1 - this.visibleAreaRate) / 2
 			);
 
 		if (fromDrag && !overflow) {
@@ -1132,7 +1135,7 @@ Rst.Slider = (function() {
 
 		var size = Math.round(
 			this.getViewSizeFixed(true)[this.options.direction]
-			* this.options.visibleArea
+			* this.visibleAreaRate
 		);
 		var gapSize = this.getGapSize();
 		var count = this.options.slideMaxCount;
@@ -1203,11 +1206,21 @@ Rst.Slider = (function() {
 			] = this.normalizedSize;
 		}
 
+		this.visibleAreaRate = this.options.visibleArea;
+		if (
+			this.options.visibleAreaMax
+			&& (this.options.direction === 'x' ? x : y) * this.visibleAreaRate
+				> this.options.visibleAreaMax
+		) {
+			this.visibleAreaRate = this.options.visibleAreaMax
+				/ (this.options.direction === 'x' ? x : y);
+		}
+
 		var gapSize = this.getGapSize();
 		var visibleCount = this.getVisibleSlidesCount();
 		this.slideSize = Math.round(
 			(
-				((this.options.direction === 'x' ? x : y) * this.options.visibleArea)
+				((this.options.direction === 'x' ? x : y) * this.visibleAreaRate)
 				- (gapSize * (visibleCount - 1))
 			) / visibleCount
 		);
@@ -1342,18 +1355,18 @@ Rst.Slider = (function() {
 		if (this.elements.overlayPrev && this.elements.overlayNext) {
 			if (this.options.direction === 'x') {
 				this.modify(this.elements.overlayPrev, {
-					width: Math.round(size.x * (1 - this.options.visibleArea) / 2)
+					width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
 				});
 				this.modify(this.elements.overlayNext, {
-					width: Math.round(size.x * (1 - this.options.visibleArea) / 2)
+					width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
 				});
 			}
 			else {
 				this.modify(this.elements.overlayPrev, {
-					height: Math.round(size.y * (1 - this.options.visibleArea) / 2)
+					height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
 				});
 				this.modify(this.elements.overlayNext, {
-					height: Math.round(size.y * (1 - this.options.visibleArea) / 2)
+					height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
 				});
 			}
 		}
@@ -1386,7 +1399,7 @@ Rst.Slider = (function() {
 				offset: -self.getSlideOffset(this.slideIndex)
 					+ Math.round(
 						backupSize
-						* (1 - this.options.visibleArea)
+						* (1 - this.visibleAreaRate)
 						/ 2
 					)
 			});
@@ -1596,7 +1609,7 @@ Rst.Slider = (function() {
 				- this.activeSlideOffset
 				+ (
 					this.getViewSizeFixed(true)[this.options.direction]
-					* (1 - this.options.visibleArea)
+					* (1 - this.visibleAreaRate)
 					/ 2
 				)
 			) /
@@ -1671,23 +1684,23 @@ Rst.Slider = (function() {
 		if (!this.options.loop) {
 			if (slidesPos > - this.getSlideOffset(0) + (
 				this.getViewSizeFixed(true)[this.options.direction]
-				* (1 - this.options.visibleArea) / 2
+				* (1 - this.visibleAreaRate) / 2
 			)) {
 				slidesPos = (slidesPos * 0.4) - (
 					(this.getSlideOffset(0) - (
 						this.getViewSizeFixed(true)[this.options.direction]
-						* (1 - this.options.visibleArea) / 2
+						* (1 - this.visibleAreaRate) / 2
 					)) * 0.6
 				);
 			}
 			if (slidesPos < - this.getSlideOffset(this.slides.length - visibleCount) + (
 				this.getViewSizeFixed(true)[this.options.direction]
-				* (1 - this.options.visibleArea) / 2
+				* (1 - this.visibleAreaRate) / 2
 			)) {
 				slidesPos = (slidesPos * 0.4) - (
 					(this.getSlideOffset(this.slides.length - visibleCount) - (
 						this.getViewSizeFixed(true)[this.options.direction]
-						* (1 - this.options.visibleArea) / 2
+						* (1 - this.visibleAreaRate) / 2
 					)) * 0.6
 				);
 			}
