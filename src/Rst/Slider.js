@@ -943,10 +943,15 @@ Rst.Slider = (function() {
 		var visibleCount = this.getVisibleSlidesCount();
 		var preloadCount = 0;
 		if (this.options.type === 'slide') {
-			preloadCount = Math.min(
-				Math.floor((this.slides.length - visibleCount) / 2),
-				this.options.preloadSlides
-			);
+			if (this.options.loop) {
+				preloadCount = Math.min(
+					Math.floor((this.slides.length - visibleCount) / 2),
+					this.options.preloadSlides
+				);
+			}
+			else {
+				preloadCount = this.options.preloadSlides;
+			}
 		}
 
 		var activeSlides = [];
