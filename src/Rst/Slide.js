@@ -158,8 +158,8 @@ Rst.Slide = (function() {
 	 * @var object regular expressions for video URLs
 	 */
 	Slide.prototype.videoRegExp = {
-		youtube: /^https?:\/\/(?:www\.youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\/)/i,
-		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)/i
+		youtube: /^https?:\/\/(?:www\.youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\?|#|\/)(?:(?:.*[?&#]|)t=([0-9hms]+))?/i,
+		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)(?:.*#t=([0-9hms]+))?/i
 	};
 
 	/**
@@ -500,7 +500,7 @@ Rst.Slide = (function() {
 	Slide.prototype.startVideo = function() {
 
 		var self = this;
-		var videoId, apiCallback, matches;
+		var videoId, apiCallback, matches, time;
 
 		this.slider.stopAutoplay(true);
 
@@ -509,12 +509,21 @@ Rst.Slide = (function() {
 			this.element.addClass(this.slider.options.cssPrefix + 'video-youtube');
 
 			videoId = matches[1];
+			time = matches[2];
+			if (time) {
+				time = time.split(/[hm]/).reverse();
+				time[0] = parseInt(time[0] || 0, 10);
+				time[1] = parseInt(time[1] || 0, 10);
+				time[2] = parseInt(time[2] || 0, 10);
+				time = time[0] + (time[1] * 60) + (time[2] * 60 * 60);
+			}
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
 					'http://www.youtube.com/embed/' +
 					videoId +
-					'?autoplay=1&enablejsapi=1&wmode=opaque'
+					'?autoplay=1&enablejsapi=1&wmode=opaque' +
+					(time ? '&start=' + time : '')
 				)
 				.attr('frameborder', 0)
 				.attr('allowfullscreen', 'allowfullscreen')
@@ -553,12 +562,14 @@ Rst.Slide = (function() {
 			this.element.addClass(this.slider.options.cssPrefix + 'video-vimeo');
 
 			videoId = matches[1];
+			time = matches[2];
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
 					'http://player.vimeo.com/video/' +
 					videoId +
-					'?autoplay=1&api=1'
+					'?autoplay=1&api=1' +
+					(time ? '#t=' + time : '')
 				)
 				.attr('frameborder', 0)
 				.attr('allowfullscreen', 'allowfullscreen')
