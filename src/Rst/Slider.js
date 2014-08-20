@@ -1302,6 +1302,16 @@ Rst.Slider = (function() {
 			if (pauseAutoplay) {
 				this.pauseAutoplay();
 			}
+			if (
+				this.elements.main.css('position') === 'static'
+				|| this.elements.main.css('position') === 'relative'
+			) {
+				// Prevent scrolling issues, see #18
+				this.elements.main.css(
+					'margin-bottom',
+					this.elements.main.outerHeight(true) + 100 + 'px'
+				);
+			}
 			this.elements.view.css({display: 'none'});
 			if (this.nav.elements.main) {
 				this.nav.elements.main.css({display: 'none'});
@@ -1323,6 +1333,7 @@ Rst.Slider = (function() {
 			if (this.elements.footer) {
 				this.elements.footer.css({display: ''});
 			}
+			this.elements.main.css('margin-bottom', '');
 			if (pauseAutoplay) {
 				this.playAutoplay();
 			}
