@@ -1513,7 +1513,20 @@ Rst.Slider = (function() {
 			move: 'mousemove'
 		};
 
-		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
+		if (window.navigator.pointerEnabled && window.navigator.maxTouchPoints) {
+			eventNames = {
+				start: 'pointerdown',
+				stop: 'pointerup',
+				move: 'pointermove'
+			};
+			this.elements.crop.css('touch-action', 'pan-' + (this.options.direction === 'x' ? 'y' : 'x') + ' pinch-zoom double-tap-zoom');
+			this.elements.main.on('pointerdown', function(event) {
+				if (event.originalEvent.pointerType === 'touch') {
+					self.setTouch(true);
+				}
+			});
+		}
+		else if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
 			eventNames = {
 				start: 'MSPointerDown',
 				stop: 'MSPointerUp',
@@ -1567,7 +1580,10 @@ Rst.Slider = (function() {
 		}
 
 		// detect mouse or touch event
-		if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
+		if (window.navigator.pointerEnabled && window.navigator.maxTouchPoints) {
+			this.setTouch(event.originalEvent.pointerType === 'touch');
+		}
+		else if (window.navigator.msPointerEnabled && window.navigator.msMaxTouchPoints) {
 			this.setTouch(event.originalEvent.pointerType === event.originalEvent.MSPOINTER_TYPE_TOUCH);
 		}
 		else {
