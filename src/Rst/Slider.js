@@ -164,6 +164,12 @@ Rst.Slider = (function() {
 		});
 		this.resize();
 
+		$(window).on('domready.rsts load.rsts', function(){
+			if (self.windowSizeHasChanged()) {
+				self.resize();
+			}
+		});
+
 		this.nav.combineItems();
 
 		if (this.options.type === 'slide') {
@@ -1106,6 +1112,10 @@ Rst.Slider = (function() {
 			this.preloadSlides(this.slideIndex);
 		}
 
+		if (this.windowSizeHasChanged()) {
+			this.resize();
+		}
+
 		this.elements.main.trigger({
 			type: 'rsts-slidestop',
 			rstSlider: this
@@ -1287,6 +1297,26 @@ Rst.Slider = (function() {
 	};
 
 	/**
+	 * @return true if the size of the window has changed since the last call
+	 */
+	Slider.prototype.windowSizeHasChanged = function() {
+
+		var changed = !(
+			this.lastWindowDimensions
+			&& this.lastWindowDimensions.x === $(window).width()
+			&& this.lastWindowDimensions.y === $(window).height()
+		);
+
+		this.lastWindowDimensions = {
+			x: $(window).width(),
+			y: $(window).height()
+		};
+
+		return changed;
+
+	};
+
+	/**
 	 * recalculates the size of the slider
 	 */
 	Slider.prototype.resize = function() {
@@ -1428,6 +1458,9 @@ Rst.Slider = (function() {
 		}
 
 		this.checkVisibility();
+
+		// Update last window dimensions
+		this.windowSizeHasChanged();
 
 	};
 
