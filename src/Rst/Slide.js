@@ -22,8 +22,11 @@ Rst.Slide = (function() {
 
 		this.content = $(element);
 
+		var sliderClasses = this.content.attr('data-rsts-class');
+
 		this.data = {
-			name: this.content.attr('data-rsts-name') || this.content.attr('title')
+			name: this.content.attr('data-rsts-name') || this.content.attr('title'),
+			sliderClasses: (sliderClasses && sliderClasses.split(' ')) || []
 		};
 
 		if (

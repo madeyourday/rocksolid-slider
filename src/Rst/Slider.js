@@ -1041,6 +1041,8 @@ Rst.Slider = (function() {
 			0;
 		var keepSlides = [];
 		var activeSlides = [];
+		var allClasses = [];
+		var activeClasses = [];
 
 		for (var i = this.slideIndex - preloadCount; i <= this.slideIndex + preloadCount + visibleCount - 1; i++) {
 			keepSlides.push(i < 0
@@ -1058,6 +1060,7 @@ Rst.Slider = (function() {
 		}
 
 		$.each(this.slides, function(i, slide) {
+			$.merge(allClasses, slide.data.sliderClasses);
 			if (slide.isInjected() && $.inArray(i, keepSlides) === -1) {
 				if (
 					self.options.type === 'fade' &&
@@ -1081,7 +1084,13 @@ Rst.Slider = (function() {
 		this.nav.setActive(activeSlides);
 		$.each(activeSlides, function(i, slideIndex) {
 			self.slides[slideIndex].setState('active');
+			$.merge(activeClasses, self.slides[slideIndex].data.sliderClasses);
 		});
+
+		this.elements.main.removeClass($.grep(allClasses, function(className) {
+			return $.inArray(className, activeClasses) === -1;
+		}).join(' '));
+		this.elements.main.addClass(activeClasses.join(' '));
 
 		if (this.options.deepLinkPrefix && this.getIndexFromUrl() !== this.slideIndex) {
 			if (this.slideIndex) {
