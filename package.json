@@ -1,6 +1,6 @@
 {
   "name": "rocksolid-slider",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "jQuery slider plugin",
   "devDependencies": {
     "grunt": "^0.4.4",
