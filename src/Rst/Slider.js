@@ -1603,6 +1603,18 @@ Rst.Slider = (function() {
 			return self.onDragMove(event);
 		});
 
+		this.elements.crop.on('dragstart', function(event) {
+			if (self.isDragging) {
+				event.preventDefault();
+			}
+		});
+
+		if (this.elements.crop[0].addEventListener) {
+			this.elements.crop[0].addEventListener('click', function(event) {
+				return self.onClickCapturing($.event.fix(event));
+			}, true);
+		}
+
 	};
 
 	/**
@@ -1612,9 +1624,17 @@ Rst.Slider = (function() {
 
 		if (
 			this.isDragging ||
-			(event.type === 'mousedown' && event.which !== 1) ||
+			(event.type === 'mousedown' && event.which !== 1)
+		) {
+			return;
+		}
+
+		this.dragLastDiff = 0;
+		this.touchAxis = '';
+
+		if (
 			$(event.target).closest(
-				'.no-drag,a,button,input,select,textarea',
+				'.' + this.options.cssPrefix + 'no-drag',
 				this.elements.slides
 			).length
 		) {
@@ -1637,11 +1657,6 @@ Rst.Slider = (function() {
 
 		var pos = this.getPositionFromEvent(event);
 
-		if (! this.isTouch) {
-			event.preventDefault();
-			this.stopAutoplay();
-		}
-
 		this.elements.main.addClass(this.options.cssPrefix + 'dragging');
 
 		this.isDragging = true;
@@ -1650,9 +1665,7 @@ Rst.Slider = (function() {
 			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().top
 		};
 		this.dragLastPos = pos[this.options.direction];
-		this.dragLastDiff = 0;
-		this.touchStartPos = pos;
-		this.touchAxis = '';
+		this.rawStartPos = pos;
 
 		// stop current animation
 		this.modify(this.elements.slides, {
@@ -1710,43 +1723,35 @@ Rst.Slider = (function() {
 			return;
 		}
 
+		// multiple touches
+		if (event.originalEvent.touches && event.originalEvent.touches[1]) {
+			return this.onDragStop();
+		}
+
 		var pos = this.getPositionFromEvent(event);
 		var diffAxis;
 
-		if (this.isTouch) {
-
-			if (! this.touchAxis) {
-				diffAxis =
-					Math.abs(pos.x - this.touchStartPos.x) -
-					Math.abs(pos.y - this.touchStartPos.y);
-				if (diffAxis > 4) {
-					this.touchAxis = 'x';
-				}
-				else if (diffAxis < -4) {
-					this.touchAxis = 'y';
-				}
+		if (! this.touchAxis) {
+			diffAxis =
+				Math.abs(pos.x - this.rawStartPos.x) -
+				Math.abs(pos.y - this.rawStartPos.y);
+			if (diffAxis > (this.isTouch ? 4 : 2)) {
+				this.touchAxis = 'x';
 			}
-
-			if (this.touchAxis === this.options.direction) {
-				event.preventDefault();
-				this.stopAutoplay();
+			else if (diffAxis < -(this.isTouch ? 4 : 2)) {
+				this.touchAxis = 'y';
 			}
-			else if (! this.touchAxis) {
-				return;
-			}
-			else {
-				return this.onDragStop();
-			}
-
-			// multiple touches
-			if (event.originalEvent.touches && event.originalEvent.touches[1]) {
-				return this.onDragStop();
-			}
-
 		}
-		else {
+
+		if (this.touchAxis === this.options.direction) {
 			event.preventDefault();
 			this.stopAutoplay();
+		}
+		else if (! this.touchAxis) {
+			return;
+		}
+		else {
+			return this.onDragStop();
 		}
 
 		var posDiff = this.dragLastPos - pos[this.options.direction];
@@ -1788,6 +1793,19 @@ Rst.Slider = (function() {
 			this.dragLastDiff = posDiff;
 		}
 		this.dragLastPos = pos[this.options.direction];
+
+	};
+
+	/**
+	 * on click event in capturing phase
+	 */
+	Slider.prototype.onClickCapturing = function(event) {
+
+		// Prevent click events after drag gestures
+		if (this.dragLastDiff !== 0 && typeof this.dragLastDiff !== 'undefined') {
+			event.stopPropagation();
+			event.preventDefault();
+		}
 
 	};
 
