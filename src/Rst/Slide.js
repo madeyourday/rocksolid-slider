@@ -20,14 +20,48 @@ Rst.Slide = (function() {
 
 		this.slider = slider;
 
+		this.element = $(document.createElement('div'))
+			.addClass(slider.options.cssPrefix + 'slide');
+
+		this.data = {
+			name: undefined,
+			sliderClasses: []
+		};
+		this.backgrounds = $([]);
+
+		if (element.nodeName.toLowerCase() === 'script' && element.type === 'text/html') {
+			this.contentHtml = element.innerHTML.replace(/\\(.)/gi, '$1');
+		}
+		else {
+			this.init(element);
+		}
+
+		this.setState('inactive');
+
+	}
+
+	/**
+	 * init this slide
+	 */
+	Slide.prototype.init = function(element) {
+
+		var self = this;
+
+		if (this.isInitialized()) {
+			return;
+		}
+
+		if (!element && this.contentHtml) {
+			element = $(this.contentHtml)[0];
+			delete this.contentHtml;
+		}
+
 		this.content = $(element);
 
 		var sliderClasses = this.content.attr('data-rsts-class');
 
-		this.data = {
-			name: this.content.attr('data-rsts-name') || this.content.attr('title'),
-			sliderClasses: (sliderClasses && sliderClasses.split(' ')) || []
-		};
+		this.data.name = this.content.attr('data-rsts-name') || this.content.attr('title');
+		this.data.sliderClasses = (sliderClasses && sliderClasses.split(' ')) || [];
 
 		if (
 			element.nodeName.toLowerCase() === 'img'
@@ -40,7 +74,7 @@ Rst.Slide = (function() {
 		this.centerContent =
 			this.content.attr('data-rsts-center') !== undefined
 			? this.content.attr('data-rsts-center')
-			: slider.options.centerContent;
+			: this.slider.options.centerContent;
 
 		if (this.centerContent !== 'x' && this.centerContent !== 'y') {
 			this.centerContent = !!this.centerContent;
@@ -50,9 +84,8 @@ Rst.Slide = (function() {
 			this.centerContent = false;
 		}
 
-		this.element = $(document.createElement('div'))
-			.addClass(slider.options.cssPrefix + 'slide')
-			.addClass(slider.options.cssPrefix + 'slide-' + this.type)
+		this.element
+			.addClass(this.slider.options.cssPrefix + 'slide-' + this.type)
 			.append(element);
 
 		if (
@@ -119,25 +152,25 @@ Rst.Slide = (function() {
 			this.data.name = this.data.name || this.element.find('img').last().attr('alt');
 		}
 
-		if (this.data.name && slider.options.captions) {
+		if (this.data.name && this.slider.options.captions) {
 			$(document.createElement('div'))
-				.addClass(slider.options.cssPrefix + 'caption')
+				.addClass(this.slider.options.cssPrefix + 'caption')
 				.text(this.data.name)
 				.appendTo(this.element);
 		}
 
 		var mediaLoadEvent = function() {
 
-			slider.resize();
+			self.slider.resize(self.data.index);
 
 			// Fix safari bug with invisible images, see #9
-			if (slider.css3Supported) {
+			if (self.slider.css3Supported) {
 				// Remove 3d transforms
-				slider.elements.crop.css('transform', '');
+				self.slider.elements.crop.css('transform', '');
 				// Get the css value to ensure the engine applies the styles
-				slider.elements.crop.css('transform');
+				self.slider.elements.crop.css('transform');
 				// Restore the original value
-				slider.elements.crop.css('transform', 'translateZ(0)');
+				self.slider.elements.crop.css('transform', 'translateZ(0)');
 			}
 
 		};
@@ -165,9 +198,7 @@ Rst.Slide = (function() {
 
 		}
 
-		this.setState('inactive');
-
-	}
+	};
 
 	/**
 	 * @var object regular expressions for video URLs
@@ -185,6 +216,13 @@ Rst.Slide = (function() {
 			this.element.get(0).parentNode
 			&& this.element.get(0).parentNode.tagName
 		);
+	};
+
+	/**
+	 * @return boolean true if the slide was already initialized
+	 */
+	Slide.prototype.isInitialized = function() {
+		return !!this.content;
 	};
 
 	/**

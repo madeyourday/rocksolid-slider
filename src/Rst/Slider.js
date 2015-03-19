@@ -960,14 +960,9 @@ Rst.Slider = (function() {
 			}
 		}
 
-		var activeSlides = [];
-		for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
-			activeSlides.push(i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
-		}
+		var activeSlides = this.getActiveSlides(slideIndex);
 
+		var initCount = 0;
 		var slide, key;
 		for (i = slideIndex - preloadCount; i <= slideIndex + preloadCount + visibleCount - 1; i++) {
 
@@ -999,6 +994,10 @@ Rst.Slider = (function() {
 
 			// Check if the slide isn't already injected
 			if (!slide.isInjected()) {
+				if (!slide.isInitialized()) {
+					slide.init();
+					initCount++;
+				}
 				if (self.options.type === 'fade') {
 					self.modify(slide.element, {opacity: 0});
 				}
@@ -1024,6 +1023,31 @@ Rst.Slider = (function() {
 			}
 
 		}
+
+		if (this.normalizeSize && initCount) {
+			this.resize();
+		}
+
+	};
+
+	/**
+	 * returns active slide indices
+	 */
+	Slider.prototype.getActiveSlides = function(slideIndex) {
+
+		slideIndex = slideIndex !== undefined ? slideIndex : this.slideIndex;
+
+		var slides = [];
+		var visibleCount = this.getVisibleSlidesCount();
+
+		for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
+			slides.push(i >= this.slides.length
+				? i - this.slides.length
+				: i
+			);
+		}
+
+		return slides;
 
 	};
 
@@ -1328,15 +1352,33 @@ Rst.Slider = (function() {
 	/**
 	 * recalculates the size of the slider
 	 */
-	Slider.prototype.resize = function() {
+	Slider.prototype.resize = function(slideIndex) {
 
 		var self = this;
 		var visibleCountBefore = this.getVisibleSlidesCount();
+		var slidesOffsetBefore = -this.getSlideOffset(this.slideIndex)
+			+ Math.round(
+				this.getViewSizeFixed(true)[this.options.direction]
+				* (1 - this.visibleAreaRate) / 2
+			);
 		var width, height;
 		var pauseAutoplay = !this.autoplayPaused;
 
+		if (
+			slideIndex !== undefined
+			&& $.inArray(slideIndex, this.getActiveSlides()) === -1
+			&& !this.normalizeSize
+		) {
+			// Don't resize if the source slide doesn't affect the size
+			return;
+		}
+
 		// Check if the CSS height value has changed to "auto" or vice versa
-		if (this.options.direction === 'x' && this.options.height === 'css') {
+		if (
+			this.options.direction === 'x'
+			&& this.options.height === 'css'
+			&& slideIndex === undefined
+		) {
 			// Pause autoplay to freeze the progress bar
 			if (pauseAutoplay) {
 				this.pauseAutoplay();
@@ -1449,14 +1491,18 @@ Rst.Slider = (function() {
 
 		this.preloadSlides(this.slideIndex);
 
-		if (this.options.type === 'slide') {
+		var slidesOffsetTarget = -this.getSlideOffset(this.slideIndex)
+			+ Math.round(
+				backupSize
+				* (1 - this.visibleAreaRate) / 2
+			);
+
+		if (this.options.type === 'slide' && (
+			slidesOffsetTarget !== slidesOffsetBefore
+			|| slideIndex === undefined
+		)) {
 			this.modify(this.elements.slides, {
-				offset: -self.getSlideOffset(this.slideIndex)
-					+ Math.round(
-						backupSize
-						* (1 - this.visibleAreaRate)
-						/ 2
-					)
+				offset: slidesOffsetTarget
 			});
 		}
 
