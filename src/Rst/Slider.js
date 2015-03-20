@@ -634,7 +634,7 @@ Rst.Slider = (function() {
 					index = self.slides.length - visibleCount;
 				}
 				else {
-					index = 0;
+					return self.stopAutoplay(true);
 				}
 			}
 			self.goTo(index, false, true);
