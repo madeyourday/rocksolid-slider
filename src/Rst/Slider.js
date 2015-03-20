@@ -545,7 +545,7 @@ Rst.Slider = (function() {
 		if (this.options.autoplayRestart && !noRestart) {
 			this.autoplayTimeout = setTimeout(function() {
 				self.autoplay();
-			}, this.options.autoplayRestart - this.options.autoplay);
+			}, this.options.autoplayRestart - this.options.autoplay + (this.options.duration * 2));
 		}
 
 	};
