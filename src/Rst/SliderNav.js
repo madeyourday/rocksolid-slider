@@ -203,6 +203,32 @@ Rst.SliderNav = (function() {
 	};
 
 	/**
+	 * show navigation
+	 */
+	SliderNav.prototype.show = function() {
+
+		$([])
+			.add(this.elements.prev)
+			.add(this.elements.next)
+			.add(this.elements.main)
+			.css('display', '');
+
+	};
+
+	/**
+	 * hide navigation
+	 */
+	SliderNav.prototype.hide = function() {
+
+		$([])
+			.add(this.elements.prev)
+			.add(this.elements.next)
+			.add(this.elements.main)
+			.css('display', 'none');
+
+	};
+
+	/**
 	 * set
 	 * @return jQuery element
 	 */

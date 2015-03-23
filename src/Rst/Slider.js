@@ -1536,6 +1536,13 @@ Rst.Slider = (function() {
 			});
 		}
 
+		if (this.getVisibleSlidesCount() >= this.slides.length) {
+			this.nav.hide();
+		}
+		else {
+			this.nav.show();
+		}
+
 		if (visibleCountBefore !== this.getVisibleSlidesCount()) {
 			this.nav.combineItems();
 			// Sets active states
