@@ -226,6 +226,20 @@ Rst.Slide = (function() {
 	};
 
 	/**
+	 * @return boolean true if all media (currently only images) is loaded
+	 */
+	Slide.prototype.isMediaLoaded = function() {
+		var loaded = true;
+		this.element.find('img').each(function() {
+			if (this.complete === false) {
+				loaded = false;
+				return false;
+			}
+		});
+		return loaded;
+	};
+
+	/**
 	 * get width and height based on width or height
 	 * @return object {x: ..., y: ...}
 	 */

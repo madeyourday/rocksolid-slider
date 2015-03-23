@@ -624,11 +624,13 @@ Rst.Slider = (function() {
 		this.startAutoplayProgressBar(duration);
 
 		var intervalFunction = function() {
+
 			var visibleCount = self.getVisibleSlidesCount();
 			var index = self.slideIndex + (
 				Math.min(self.options.prevNextSteps, visibleCount)
 				|| visibleCount
 			);
+
 			if (index > self.slides.length - visibleCount && !self.options.loop) {
 				if (self.slideIndex < self.slides.length - visibleCount) {
 					index = self.slides.length - visibleCount;
@@ -637,12 +639,35 @@ Rst.Slider = (function() {
 					return self.stopAutoplay(true);
 				}
 			}
-			self.goTo(index, false, true);
-			self.startAutoplayProgressBar();
+
+			var allLoaded = true;
+			$.each(self.getActiveSlides(index), function(trash, index) {
+				if (!self.slides[index].isMediaLoaded()) {
+					allLoaded = false;
+					return false;
+				}
+			});
+
+			if (allLoaded) {
+				self.goTo(index, false, true);
+				self.startAutoplayProgressBar();
+			}
+			// If the next Slide hasn't finished loading, try again in 100ms
+			else {
+				clearTimeout(self.autoplayTimeout);
+				clearInterval(self.autoplayInterval);
+				self.autoplayTimeout = setTimeout(function() {
+					intervalFunction();
+					clearInterval(self.autoplayInterval);
+					self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
+				}, 100);
+			}
+
 		};
 
 		this.autoplayTimeout = setTimeout(function() {
 			intervalFunction();
+			clearInterval(self.autoplayInterval);
 			self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
 		}, duration);
 
@@ -948,23 +973,21 @@ Rst.Slider = (function() {
 
 		var visibleCount = this.getVisibleSlidesCount();
 		var preloadCount = 0;
-		if (this.options.type === 'slide') {
-			if (this.options.loop) {
-				preloadCount = Math.min(
-					Math.floor((this.slides.length - visibleCount) / 2),
-					this.options.preloadSlides
-				);
-			}
-			else {
-				preloadCount = this.options.preloadSlides;
-			}
+		if (this.options.loop) {
+			preloadCount = Math.min(
+				Math.floor((this.slides.length - visibleCount) / 2),
+				this.options.preloadSlides
+			);
+		}
+		else {
+			preloadCount = this.options.preloadSlides;
 		}
 
 		var activeSlides = this.getActiveSlides(slideIndex);
 
 		var initCount = 0;
 		var slide, key;
-		for (i = slideIndex - preloadCount; i <= slideIndex + preloadCount + visibleCount - 1; i++) {
+		for (var i = slideIndex - preloadCount; i <= slideIndex + preloadCount + visibleCount - 1; i++) {
 
 			key = i < 0
 				? i + this.slides.length
@@ -974,10 +997,21 @@ Rst.Slider = (function() {
 
 			slide = this.slides[key];
 
+			if (!this.options.loop && (i < 0 || i >= this.slides.length)) {
+				continue;
+			}
+
+			if (!slide.isInitialized()) {
+				slide.init();
+				initCount++;
+			}
+
+			// Ignore preloadCount if type is not "slide"
+			if (self.options.type !== 'slide' && i !== slideIndex) {
+				continue;
+			}
+
 			if (self.options.type === 'slide') {
-				if (!this.options.loop && (i < 0 || i >= this.slides.length)) {
-					continue;
-				}
 				if (
 					oldIndex !== undefined
 					&& $.inArray(key, activeSlides) === -1
@@ -994,10 +1028,6 @@ Rst.Slider = (function() {
 
 			// Check if the slide isn't already injected
 			if (!slide.isInjected()) {
-				if (!slide.isInitialized()) {
-					slide.init();
-					initCount++;
-				}
 				if (self.options.type === 'fade') {
 					self.modify(slide.element, {opacity: 0});
 				}
