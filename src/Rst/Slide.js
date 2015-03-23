@@ -245,7 +245,8 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.size = function(x, y, ret) {
 
-		var autoSize = !x || !y;
+		var origX = x;
+		var origY = y;
 
 		this.updateResponsiveImages(true);
 
@@ -272,7 +273,7 @@ Rst.Slide = (function() {
 			y = this.element.outerHeight();
 		}
 
-		this.scaleContent(x, y, autoSize);
+		this.scaleContent(origX, origY);
 		this.scaleBackground(x, y);
 
 		return {
@@ -303,7 +304,7 @@ Rst.Slide = (function() {
 	/**
 	 * scale slide contents based on width and height
 	 */
-	Slide.prototype.scaleContent = function(x, y, autoSize) {
+	Slide.prototype.scaleContent = function(x, y) {
 
 		if (this.centerContent) {
 			if (this.content.css('display') === 'inline') {
@@ -323,7 +324,7 @@ Rst.Slide = (function() {
 			}
 		}
 
-		if (!autoSize && (this.type === 'image' || this.type === 'video')) {
+		if (x && y && (this.type === 'image' || this.type === 'video')) {
 			this.scaleImage(this.element.find('img').last(), x, y);
 		}
 
