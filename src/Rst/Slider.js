@@ -534,7 +534,6 @@ Rst.Slider = (function() {
 		var self = this;
 
 		clearTimeout(this.autoplayTimeout);
-		clearInterval(this.autoplayInterval);
 
 		this.autoplayStopped = true;
 
@@ -561,7 +560,6 @@ Rst.Slider = (function() {
 
 		if (! this.autoplayStopped) {
 			clearTimeout(this.autoplayTimeout);
-			clearInterval(this.autoplayInterval);
 		}
 
 		this.autoplayPaused = true;
@@ -592,7 +590,10 @@ Rst.Slider = (function() {
 					this.elements.progressBar.outerWidth() /
 					this.elements.progress.width()
 				: 0)
-			) * this.options.autoplay);
+			) * (
+				this.slides[this.slideIndex].getData().autoplay
+				|| this.options.autoplay
+			));
 		}
 
 	};
@@ -609,7 +610,6 @@ Rst.Slider = (function() {
 		}
 
 		clearTimeout(this.autoplayTimeout);
-		clearInterval(this.autoplayInterval);
 
 		this.autoplayStopped = false;
 
@@ -619,7 +619,10 @@ Rst.Slider = (function() {
 		}
 
 		duration = (duration || duration === 0) ? duration :
-			(this.options.autoplay - this.options.duration);
+			((
+				this.slides[this.slideIndex].getData().autoplay
+				|| this.options.autoplay
+			) - this.options.duration);
 
 		this.startAutoplayProgressBar(duration);
 
@@ -641,7 +644,11 @@ Rst.Slider = (function() {
 			}
 
 			var allLoaded = true;
+			var currentSlide;
 			$.each(self.getActiveSlides(index), function(trash, index) {
+				if (!currentSlide) {
+					currentSlide = self.slides[index];
+				}
 				if (!self.slides[index].isMediaLoaded()) {
 					allLoaded = false;
 					return false;
@@ -651,25 +658,21 @@ Rst.Slider = (function() {
 			if (allLoaded) {
 				self.goTo(index, false, true);
 				self.startAutoplayProgressBar();
+				clearTimeout(self.autoplayTimeout);
+				self.autoplayTimeout = setTimeout(
+					intervalFunction,
+					currentSlide.getData().autoplay || self.options.autoplay
+				);
 			}
 			// If the next Slide hasn't finished loading, try again in 100ms
 			else {
 				clearTimeout(self.autoplayTimeout);
-				clearInterval(self.autoplayInterval);
-				self.autoplayTimeout = setTimeout(function() {
-					intervalFunction();
-					clearInterval(self.autoplayInterval);
-					self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
-				}, 100);
+				self.autoplayTimeout = setTimeout(intervalFunction, 100);
 			}
 
 		};
 
-		this.autoplayTimeout = setTimeout(function() {
-			intervalFunction();
-			clearInterval(self.autoplayInterval);
-			self.autoplayInterval = setInterval(intervalFunction, self.options.autoplay);
-		}, duration);
+		this.autoplayTimeout = setTimeout(intervalFunction, duration);
 
 	};
 
@@ -679,11 +682,14 @@ Rst.Slider = (function() {
 			return;
 		}
 
-		duration = duration || this.options.autoplay;
+		var autoplay = this.slides[this.slideIndex].getData().autoplay
+			|| this.options.autoplay;
+
+		duration = duration || autoplay;
 
 		this.elements.progress.addClass(this.options.cssPrefix + 'progress-active');
 		this.modify(this.elements.progressBar, {
-			width: (1 - (duration / this.options.autoplay)) * 100 + '%'
+			width: (1 - (duration / autoplay)) * 100 + '%'
 		});
 
 		// get the css value to ensure the engine applies the width

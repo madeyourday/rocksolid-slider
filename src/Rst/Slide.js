@@ -62,6 +62,9 @@ Rst.Slide = (function() {
 
 		this.data.name = this.content.attr('data-rsts-name') || this.content.attr('title');
 		this.data.sliderClasses = (sliderClasses && sliderClasses.split(' ')) || [];
+		if (this.content.attr('data-rsts-autoplay')) {
+			this.data.autoplay = parseFloat(this.content.attr('data-rsts-autoplay'));
+		}
 
 		if (
 			element.nodeName.toLowerCase() === 'img'
