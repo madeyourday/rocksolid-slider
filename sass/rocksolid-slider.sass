@@ -22,18 +22,37 @@
 
 .rsts-view
 	position: relative
+	@media print
+		position: static
 
 .rsts-crop
 	position: relative
 	overflow: hidden
+	@media print
+		position: static
+		overflow: visible
+		width: auto !important
+		height: auto !important
+		transform: none !important
 
 .rsts-slides, .rsts-slide
 	position: absolute
 	left: 0
 	top: 0
+	@media print
+		position: static
+		width: auto !important
+		height: auto !important
+		transform: none !important
+		&.rsts-slide-image img, &.rsts-slide-video img
+			width: 100% !important
+			height: auto !important
+			margin: 0 !important
 
 .rsts-slide
 	overflow: hidden
+	@media print
+		position: static
 
 .rsts-video-iframe
 	position: absolute
@@ -51,3 +70,12 @@
 	&.rsts-dragging .rsts-view
 		cursor: url("../img/closedhand.cur"), default
 		+experimental-value(cursor, grabbing)
+
+@media print
+	.rsts-nav,
+	.rsts-prev,
+	.rsts-next,
+	.rsts-overlay-prev,
+	.rsts-overlay-next,
+	.rsts-progress
+		display: none !important
