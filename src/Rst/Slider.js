@@ -34,6 +34,9 @@ Rst.Slider = (function() {
 			this.options.visibleAreaMax = 0;
 			this.options.slideMaxCount = 0;
 			this.options.slideMinSize = 0;
+			this.options.rowMaxCount = 0;
+			this.options.rowMinSize = 0;
+			this.options.rowSlideRatio = 0;
 		}
 
 		this.checkCss3Support();
@@ -163,14 +166,15 @@ Rst.Slider = (function() {
 			self.resize();
 		});
 		this.resize();
+		this.nav.combineItems();
+		// Resize again for edge cases when combineItems changed the nav height
+		this.resize();
 
 		$(window).on('domready.rsts load.rsts', function(){
 			if (self.windowSizeHasChanged()) {
 				self.resize();
 			}
 		});
-
-		this.nav.combineItems();
 
 		if (this.options.type === 'slide') {
 			this.setDragEvents();
@@ -281,6 +285,12 @@ Rst.Slider = (function() {
 		slideMaxCount: 0,
 		// minimal size of one slide in px
 		slideMinSize: 0,
+		// maximum number of visible rows
+		rowMaxCount: 0,
+		// minimal size of one row in px
+		rowMinSize: 0,
+		// row slide count ratio, e.g. 2x1 or 0.5
+		rowSlideRatio: 0,
 		// combine navigation items if multiple slides are visible (default true)
 		combineNavItems: true,
 		// number of slides to navigate by clicking prev or next
@@ -335,7 +345,8 @@ Rst.Slider = (function() {
 			this.stopAutoplay();
 		}
 
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
+		var rowsCount = this.getVisibleRowsCount();
 
 		var overflow = false;
 		var loop = 0;
@@ -348,12 +359,7 @@ Rst.Slider = (function() {
 			&& this.options.loop
 		) {
 			loop = index - this.slideIndex;
-			while (index < 0) {
-				index += this.slides.length;
-			}
-			while (index > this.slides.length - 1) {
-				index -= this.slides.length;
-			}
+			index = this.getSlideIndex(index);
 		}
 		else if (
 			(index < 0 || index > this.slides.length - visibleCount)
@@ -372,18 +378,12 @@ Rst.Slider = (function() {
 
 		var activeSlidesBefore = [];
 		for (var i = this.slideIndex; i <= this.slideIndex + visibleCount - 1; i++) {
-			activeSlidesBefore.push(i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
+			activeSlidesBefore.push(this.getSlideIndex(i));
 		}
 
 		var activeSlides = [];
 		for (i = index; i <= index + visibleCount - 1; i++) {
-			activeSlides.push(i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
+			activeSlides.push(this.getSlideIndex(i));
 		}
 
 		$.each(activeSlidesBefore, function(i, slideIndex) {
@@ -400,25 +400,25 @@ Rst.Slider = (function() {
 		var slideWidth = this.slideSize + this.getGapSize();
 
 		if (loop) {
-			this.activeSlideOffset += slideWidth * loop;
+			this.activeSlideOffset += slideWidth / rowsCount * loop;
 		}
 		else {
 			if (
 				index > this.slideIndex
-				&& index - this.slideIndex - visibleCount > this.options.preloadSlides * 2
+				&& index - this.slideIndex - visibleCount > this.options.preloadSlides * rowsCount * 2
 			) {
-				this.activeSlideOffset += (this.options.preloadSlides * 2 + visibleCount)
-					* slideWidth;
+				this.activeSlideOffset += (this.options.preloadSlides * rowsCount * 2 + visibleCount)
+					* slideWidth / rowsCount;
 			}
 			else if (
 				index < this.slideIndex
-				&& this.slideIndex - index - visibleCount > this.options.preloadSlides * 2
+				&& this.slideIndex - index - visibleCount > this.options.preloadSlides * rowsCount * 2
 			) {
-				this.activeSlideOffset -= (this.options.preloadSlides * 2 + visibleCount)
-					* slideWidth;
+				this.activeSlideOffset -= (this.options.preloadSlides * rowsCount * 2 + visibleCount)
+					* slideWidth / rowsCount;
 			}
 			else {
-				this.activeSlideOffset += (index - this.slideIndex) * slideWidth;
+				this.activeSlideOffset += (index - this.slideIndex) * slideWidth / rowsCount;
 			}
 		}
 
@@ -628,9 +628,9 @@ Rst.Slider = (function() {
 
 		var intervalFunction = function() {
 
-			var visibleCount = self.getVisibleSlidesCount();
+			var visibleCount = self.getVisibleCount();
 			var index = self.slideIndex + (
-				Math.min(self.options.prevNextSteps, visibleCount)
+				Math.min(self.options.prevNextSteps * self.getVisibleRowsCount(), visibleCount)
 				|| visibleCount
 			);
 
@@ -830,6 +830,10 @@ Rst.Slider = (function() {
 
 		}
 
+		if (typeof css.rowOffset === 'number') {
+			css[{x: 'top', y: 'left'}[this.options.direction]] = css.rowOffset;
+		}
+
 		// stop animations
 		element.stop();
 
@@ -898,9 +902,9 @@ Rst.Slider = (function() {
 	 * slides to the next slide
 	 */
 	Slider.prototype.next = function() {
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 		var newIndex = this.slideIndex + (
-			Math.min(this.options.prevNextSteps, visibleCount)
+			Math.min(this.options.prevNextSteps * this.getVisibleRowsCount(), visibleCount)
 			|| visibleCount
 		);
 		if (
@@ -917,9 +921,9 @@ Rst.Slider = (function() {
 	 * slides to the previous slide
 	 */
 	Slider.prototype.prev = function() {
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 		var newIndex = this.slideIndex - (
-			Math.min(this.options.prevNextSteps, visibleCount)
+			Math.min(this.options.prevNextSteps * this.getVisibleRowsCount(), visibleCount)
 			|| visibleCount
 		);
 		if (
@@ -976,17 +980,20 @@ Rst.Slider = (function() {
 
 		var size = this.getViewSizeFixed();
 		size[this.options.direction] = this.slideSize;
+		if (this.getVisibleRowsCount() > 1) {
+			size[this.options.direction === 'x' ? 'y' : 'x'] = this.rowSize;
+		}
 
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 		var preloadCount = 0;
 		if (this.options.loop) {
 			preloadCount = Math.min(
 				Math.floor((this.slides.length - visibleCount) / 2),
-				this.options.preloadSlides
+				this.options.preloadSlides * this.getVisibleRowsCount()
 			);
 		}
 		else {
-			preloadCount = this.options.preloadSlides;
+			preloadCount = this.options.preloadSlides * this.getVisibleRowsCount();
 		}
 
 		var activeSlides = this.getActiveSlides(slideIndex);
@@ -995,12 +1002,7 @@ Rst.Slider = (function() {
 		var slide, key;
 		for (var i = slideIndex - preloadCount; i <= slideIndex + preloadCount + visibleCount - 1; i++) {
 
-			key = i < 0
-				? i + this.slides.length
-				: i >= this.slides.length
-				? i - this.slides.length
-				: i;
-
+			key = this.getSlideIndex(i);
 			slide = this.slides[key];
 
 			if (!this.options.loop && (i < 0 || i >= this.slides.length)) {
@@ -1028,7 +1030,8 @@ Rst.Slider = (function() {
 					continue;
 				}
 				self.modify(slide.element, {
-					offset: self.getSlideOffset(i)
+					offset: self.getSlideOffset(i),
+					rowOffset: self.getRowOffset(i)
 				});
 			}
 
@@ -1074,13 +1077,10 @@ Rst.Slider = (function() {
 		slideIndex = slideIndex !== undefined ? slideIndex : this.slideIndex;
 
 		var slides = [];
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 
 		for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
-			slides.push(i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
+			slides.push(this.getSlideIndex(i));
 		}
 
 		return slides;
@@ -1095,9 +1095,9 @@ Rst.Slider = (function() {
 		clearTimeout(this.cleanupSlidesTimeout);
 
 		var self = this;
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 		var preloadCount = this.options.type === 'slide' ?
-			this.options.preloadSlides :
+			this.options.preloadSlides * this.getVisibleRowsCount() :
 			0;
 		var keepSlides = [];
 		var activeSlides = [];
@@ -1105,18 +1105,10 @@ Rst.Slider = (function() {
 		var activeClasses = [];
 
 		for (var i = this.slideIndex - preloadCount; i <= this.slideIndex + preloadCount + visibleCount - 1; i++) {
-			keepSlides.push(i < 0
-				? i + this.slides.length
-				: i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
+			keepSlides.push(this.getSlideIndex(i));
 		}
 		for (i = this.slideIndex; i <= this.slideIndex + visibleCount - 1; i++) {
-			activeSlides.push(i >= this.slides.length
-				? i - this.slides.length
-				: i
-			);
+			activeSlides.push(this.getSlideIndex(i));
 		}
 
 		$.each(this.slides, function(i, slide) {
@@ -1199,11 +1191,50 @@ Rst.Slider = (function() {
 	 * @return number    calculated offset
 	 */
 	Slider.prototype.getSlideOffset = function(index) {
-		var size = this.getViewSizeFixed(true);
+		this.getViewSizeFixed(true); // Generate this.slideSize
+		var rowsCount = this.getVisibleRowsCount();
 
-		return (index - this.slideIndex)
+		return Math.floor((index - this.slideIndex) / rowsCount)
 			* (this.slideSize + this.getGapSize())
 			+ this.activeSlideOffset;
+	};
+
+	/**
+	 * Returns the calculated row offset for the specified slide
+	 *
+	 * @param  int index slide index
+	 * @return number    calculated offset
+	 */
+	Slider.prototype.getRowOffset = function(index) {
+		this.getViewSizeFixed(true); // Generate this.rowSize
+		var rowsCount = this.getVisibleRowsCount();
+		var rowIndex = ((((index - this.slideIndex) % rowsCount) + rowsCount) % rowsCount);
+		var offset = 0;
+		var rowDirection = this.options.direction === 'x' ? 'y' : 'x';
+
+		if (this.autoSize) {
+			var size = {};
+			size[this.options.direction] = this.slideSize;
+			for (var i = index - rowIndex; i < index; i++) {
+				offset += this.getSlide(i).size(size.x, size.y, true, true)[rowDirection];
+			}
+			offset += rowIndex * this.getGapSize();
+		}
+		else {
+			offset = rowIndex * (this.rowSize + this.getGapSize());
+		}
+		return offset;
+	};
+
+	/**
+	 * Returns the calculated number of visible slides and rows
+	 *
+	 * @return number calculated number of visible slides and rows
+	 */
+	Slider.prototype.getVisibleCount = function() {
+
+		return this.getVisibleSlidesCount() * this.getVisibleRowsCount();
+
 	};
 
 	/**
@@ -1229,6 +1260,43 @@ Rst.Slider = (function() {
 		}
 
 		return Math.min(this.slides.length, Math.max(1, count));
+
+	};
+
+	/**
+	 * Returns the calculated number of visible rows
+	 *
+	 * @return number calculated number of visible rows
+	 */
+	Slider.prototype.getVisibleRowsCount = function() {
+
+		if (!this.options.rowMaxCount && !this.options.rowMinSize && !this.options.rowSlideRatio) {
+			return 1;
+		}
+
+		var size = this.getViewSizeFixed(true)[
+			this.options.direction === 'x' ? 'y' : 'x'
+		];
+		var gapSize = this.getGapSize();
+		var slidesCount = this.getVisibleSlidesCount();
+		var count = 0;
+
+		if (this.options.rowSlideRatio) {
+			count = Math.floor(slidesCount * this.options.rowSlideRatio);
+		}
+
+		if (this.options.rowMaxCount && (!count || count > this.options.rowMaxCount)) {
+			count = this.options.rowMaxCount;
+		}
+
+		if (size && this.options.rowMinSize && (
+			!count
+			|| (size - (gapSize * (count - 1))) / count < this.options.rowMinSize
+		)) {
+			count = Math.floor((size + gapSize) / (this.options.rowMinSize + gapSize));
+		}
+
+		return Math.min(Math.floor(this.slides.length / slidesCount), Math.max(1, count));
 
 	};
 
@@ -1309,6 +1377,17 @@ Rst.Slider = (function() {
 			) / visibleCount
 		);
 
+		var visibleRowsCount = this.getVisibleRowsCount();
+		if (this.options.direction === 'x' ? y : x) {
+			this.rowSize = Math.round((
+				(this.options.direction === 'x' ? y : x)
+				- (gapSize * (visibleRowsCount - 1))
+			) / visibleRowsCount);
+		}
+		else {
+			this.rowSize = undefined;
+		}
+
 		// Return a copy of the object
 		return $.extend({}, this.viewSizeFixedCache);
 
@@ -1329,18 +1408,22 @@ Rst.Slider = (function() {
 		// calculate the missing dimension
 		if (!size.x || !size.y) {
 
-			var visibleCount = this.getVisibleSlidesCount();
+			var colCount = this.getVisibleSlidesCount();
+			var rowCount = this.getVisibleRowsCount();
+			var gapSize = this.getGapSize();
 			var missingDimension = !size.x ? 'x' : 'y';
-			var key, slideSize, newSize;
-			for (var i = slideIndex; i <= slideIndex + visibleCount - 1; i++) {
-				key = i >= this.slides.length
-					? i - this.slides.length
-					: i;
-				slideSize = this.slides[key].size(size.x, size.y, true);
-				newSize = Math.max(newSize || 0, slideSize[missingDimension]);
+			var newSize = 0;
+			var col, row, slideSize, colSize;
+			for (col = 0; col < colCount; col++) {
+				colSize = 0;
+				for (row = 0; row < rowCount; row++) {
+					colSize += this.getSlide(slideIndex + (col * rowCount) + row)
+						.size(size.x, size.y, true)[missingDimension];
+				}
+				newSize = Math.max(newSize, colSize + ((rowCount - 1) * gapSize));
 			}
 
-			size[missingDimension] = Math.max(10, newSize || 0);
+			size[missingDimension] = newSize;
 
 		}
 
@@ -1391,7 +1474,7 @@ Rst.Slider = (function() {
 	Slider.prototype.resize = function(slideIndex) {
 
 		var self = this;
-		var visibleCountBefore = this.getVisibleSlidesCount();
+		var visibleCountBefore = this.getVisibleCount();
 		var slidesOffsetBefore = -this.getSlideOffset(this.slideIndex)
 			+ Math.round(
 				this.getViewSizeFixed(true)[this.options.direction]
@@ -1506,6 +1589,7 @@ Rst.Slider = (function() {
 
 		var backupSize = size[this.options.direction];
 		size[this.options.direction] = this.slideSize;
+		size[this.options.direction === 'x' ? 'y' : 'x'] = this.rowSize;
 
 		if (!this.autoSize || this.options.direction === 'x') {
 			width = size.x;
@@ -1519,7 +1603,8 @@ Rst.Slider = (function() {
 				slide.size(width, height);
 				if (self.options.type === 'slide') {
 					self.modify(slide.element, {
-						offset: self.getSlideOffset(i)
+						offset: self.getSlideOffset(i),
+						rowOffset: self.getRowOffset(i)
 					});
 				}
 			}
@@ -1542,14 +1627,14 @@ Rst.Slider = (function() {
 			});
 		}
 
-		if (this.getVisibleSlidesCount() >= this.slides.length) {
+		if (this.getVisibleCount() >= this.slides.length) {
 			this.nav.hide();
 		}
 		else {
 			this.nav.show();
 		}
 
-		if (visibleCountBefore !== this.getVisibleSlidesCount()) {
+		if (visibleCountBefore !== this.getVisibleCount()) {
 			this.nav.combineItems();
 			// Sets active states
 			this.cleanupSlides();
@@ -1600,6 +1685,21 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getSlides = function() {
 		return this.slides;
+	};
+
+	/**
+	 * @return Rst.Slide slide at given index with overflow handeled correctley
+	 */
+	Slider.prototype.getSlide = function(index) {
+		return this.slides[this.getSlideIndex(index)];
+	};
+
+	/**
+	 * @return int slide index at given index with overflow handeled correctley
+	 */
+	Slider.prototype.getSlideIndex = function(index) {
+		return ((index % this.slides.length) + this.slides.length)
+			% this.slides.length;
 	};
 
 	/**
@@ -1779,7 +1879,7 @@ Rst.Slider = (function() {
 		this.isDragging = false;
 		this.elements.main.removeClass(this.options.cssPrefix + 'dragging');
 
-		var leftSlideIndex = this.slideIndex + Math.floor(
+		var leftSlideIndex = this.slideIndex + (Math.floor(
 			(
 				- this.getOffset(this.elements.slides)
 				- this.activeSlideOffset
@@ -1790,13 +1890,13 @@ Rst.Slider = (function() {
 				)
 			) /
 			(this.slideSize + this.getGapSize())
-		);
+		) * this.getVisibleRowsCount());
 
 		if (this.dragLastDiff <= 0) {
 			this.goTo(leftSlideIndex, true);
 		}
 		else {
-			this.goTo(leftSlideIndex + 1, true);
+			this.goTo(leftSlideIndex + this.getVisibleRowsCount(), true);
 		}
 
 	};
@@ -1848,7 +1948,7 @@ Rst.Slider = (function() {
 			pos[this.options.direction] -
 			this.dragStartPos[this.options.direction];
 
-		var visibleCount = this.getVisibleSlidesCount();
+		var visibleCount = this.getVisibleCount();
 		if (!this.options.loop) {
 			if (slidesPos > - this.getSlideOffset(0) + (
 				this.getViewSizeFixed(true)[this.options.direction]

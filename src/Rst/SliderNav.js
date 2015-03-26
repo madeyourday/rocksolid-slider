@@ -155,7 +155,7 @@ Rst.SliderNav = (function() {
 			return;
 		}
 
-		var visibleCount = this.slider.getVisibleSlidesCount();
+		var visibleCount = this.slider.getVisibleCount();
 		var slides = this.slider.getSlides();
 
 		if (this.elements[slides.length]) {
@@ -246,7 +246,7 @@ Rst.SliderNav = (function() {
 				)
 				.on('click', function(event){
 					event.preventDefault();
-					var visibleCount = self.slider.getVisibleSlidesCount();
+					var visibleCount = self.slider.getVisibleCount();
 					var goTo = index - Math.floor(
 						(visibleCount - 1) / 2
 					);
