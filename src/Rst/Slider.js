@@ -95,11 +95,13 @@ Rst.Slider = (function() {
 		if (proportion) {
 			this.proportion = proportion[1] / proportion[2];
 			delete this.options.width;
+			this.elements.main.css({width: 'auto'});
 		}
 		proportion = this.options.height.match(/([0-9.]+)[^0-9.]*x[^0-9.]*([0-9.]+)/i);
 		if (proportion) {
 			this.proportion = proportion[1] / proportion[2];
 			delete this.options.height;
+			this.elements.main.css({height: 'auto'});
 		}
 
 		if (this.options.width && this.options.width !== 'css') {
@@ -1344,16 +1346,38 @@ Rst.Slider = (function() {
 		}
 
 		if (! this.options.width && this.proportion) {
-			x = Math.round(y * this.proportion);
+			x = undefined;
 		}
 		if (! this.options.height && this.proportion) {
-			y = Math.round(x / this.proportion);
+			y = undefined;
+		}
+
+		this.visibleAreaRate = this.options.visibleArea;
+		if (
+			this.options.visibleAreaMax
+			&& (this.options.direction === 'x' ? x : y) * this.visibleAreaRate
+				> this.options.visibleAreaMax
+		) {
+			this.visibleAreaRate = this.options.visibleAreaMax /
+				(this.options.direction === 'x' ? x : y);
 		}
 
 		this.viewSizeFixedCache = {x: x, y: y};
 
 		var gapSize = this.getGapSize();
+		var visibleCount = this.getVisibleSlidesCount();
 		var visibleRowsCount = this.getVisibleRowsCount();
+
+		if (! this.options.width && this.proportion) {
+			x = this.viewSizeFixedCache.x = Math.round(((((
+				(((y + gapSize) / visibleRowsCount) - gapSize) * this.proportion
+			) + gapSize) * visibleCount) - gapSize) / this.visibleAreaRate);
+		}
+		if (! this.options.height && this.proportion) {
+			y = this.viewSizeFixedCache.y = Math.round((((
+				((((x * this.visibleAreaRate) + gapSize) / visibleCount) - gapSize) / this.proportion
+			) + gapSize) * visibleRowsCount) - gapSize);
+		}
 
 		if (this.normalizeSize && this.normalizedSize) {
 			if (this.options.direction === 'x') {
@@ -1366,17 +1390,6 @@ Rst.Slider = (function() {
 			}
 		}
 
-		this.visibleAreaRate = this.options.visibleArea;
-		if (
-			this.options.visibleAreaMax
-			&& (this.options.direction === 'x' ? x : y) * this.visibleAreaRate
-				> this.options.visibleAreaMax
-		) {
-			this.visibleAreaRate = this.options.visibleAreaMax
-				/ (this.options.direction === 'x' ? x : y);
-		}
-
-		var visibleCount = this.getVisibleSlidesCount();
 		this.slideSize = Math.round(
 			(
 				((this.options.direction === 'x' ? x : y) * this.visibleAreaRate)
