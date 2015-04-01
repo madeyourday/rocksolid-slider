@@ -1315,7 +1315,7 @@ Rst.Slider = (function() {
 
 		var x, y;
 
-		if (!this.autoSize || !this.normalizeSize || this.options.direction === 'x') {
+		if ((!this.autoSize && !this.normalizeSize) || this.options.direction === 'x') {
 			x = this.elements.main.width();
 			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
 			if (x < 10) {
@@ -1323,7 +1323,7 @@ Rst.Slider = (function() {
 			}
 			x = Math.round(x);
 		}
-		if (!this.autoSize || !this.normalizeSize || this.options.direction === 'y') {
+		if ((!this.autoSize && !this.normalizeSize) || this.options.direction === 'y') {
 			y = this.elements.main.height();
 			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
 			y -= this.nav.getSize().y;
