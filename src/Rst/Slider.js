@@ -1289,7 +1289,7 @@ Rst.Slider = (function() {
 			count = this.options.rowMaxCount;
 		}
 
-		if (size && this.options.rowMinSize && (
+		if (size && !this.normalizeSize && this.options.rowMinSize && (
 			!count
 			|| (size - (gapSize * (count - 1))) / count < this.options.rowMinSize
 		)) {
@@ -1313,7 +1313,7 @@ Rst.Slider = (function() {
 
 		var x, y;
 
-		if (!this.autoSize || this.options.direction === 'x') {
+		if (!this.autoSize || !this.normalizeSize || this.options.direction === 'x') {
 			x = this.elements.main.width();
 			x -= this.elements.view.outerWidth(true) - this.elements.view.width();
 			if (x < 10) {
@@ -1321,7 +1321,7 @@ Rst.Slider = (function() {
 			}
 			x = Math.round(x);
 		}
-		if (!this.autoSize || this.options.direction === 'y') {
+		if (!this.autoSize || !this.normalizeSize || this.options.direction === 'y') {
 			y = this.elements.main.height();
 			y -= this.elements.view.outerHeight(true) - this.elements.view.height();
 			y -= this.nav.getSize().y;
@@ -1352,10 +1352,18 @@ Rst.Slider = (function() {
 
 		this.viewSizeFixedCache = {x: x, y: y};
 
+		var gapSize = this.getGapSize();
+		var visibleRowsCount = this.getVisibleRowsCount();
+
 		if (this.normalizeSize && this.normalizedSize) {
-			this.viewSizeFixedCache[
-				this.options.direction === 'x' ? 'y' : 'x'
-			] = this.normalizedSize;
+			if (this.options.direction === 'x') {
+				y = this.viewSizeFixedCache.y =
+					((this.normalizedSize + gapSize) * visibleRowsCount) - gapSize;
+			}
+			else {
+				x = this.viewSizeFixedCache.x =
+					((this.normalizedSize + gapSize) * visibleRowsCount) - gapSize;
+			}
 		}
 
 		this.visibleAreaRate = this.options.visibleArea;
@@ -1368,7 +1376,6 @@ Rst.Slider = (function() {
 				/ (this.options.direction === 'x' ? x : y);
 		}
 
-		var gapSize = this.getGapSize();
 		var visibleCount = this.getVisibleSlidesCount();
 		this.slideSize = Math.round(
 			(
@@ -1377,7 +1384,6 @@ Rst.Slider = (function() {
 			) / visibleCount
 		);
 
-		var visibleRowsCount = this.getVisibleRowsCount();
 		if (this.options.direction === 'x' ? y : x) {
 			this.rowSize = Math.round((
 				(this.options.direction === 'x' ? y : x)
