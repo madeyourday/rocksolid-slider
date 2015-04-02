@@ -169,6 +169,7 @@ Rst.SliderNav = (function() {
 				);
 			});
 
+			this.thumbsSlider.resize();
 			this.thumbsSlider.goTo(goTo);
 
 		}
@@ -387,6 +388,17 @@ Rst.SliderNav = (function() {
 		% rowsCount) + rowsCount) % rowsCount) - Math.floor(rowsCount / 2);
 
 		this.slider.goTo(goTo);
+
+	};
+
+	/**
+	 * resize the navigation
+	 */
+	SliderNav.prototype.resize = function() {
+
+		if (this.thumbsSlider) {
+			this.thumbsSlider.resize();
+		}
 
 	};
 

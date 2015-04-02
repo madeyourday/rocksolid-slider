@@ -73,6 +73,9 @@ Rst.Slide = (function() {
 		) {
 			this.type = 'image';
 		}
+		if (element.nodeName.toLowerCase() === 'video') {
+			this.type = 'video';
+		}
 		this.type = this.content.attr('data-rsts-type') || this.type || 'default';
 
 		this.centerContent =
@@ -99,20 +102,38 @@ Rst.Slide = (function() {
 			|| this.slider.device === 'iPhone'
 			|| this.slider.device === 'iPod'
 		) {
-			this.element.find('[data-rsts-background]').each(function() {
-				if (this.nodeName.toLowerCase() !== 'video') {
-					return;
-				}
+			this.element.find('video[data-rsts-background]').each(function() {
 				var $this = $(this);
 				if ($this.attr('poster')) {
 					$(document.createElement('img'))
 						.attr('src', $this.attr('poster'))
 						.attr('data-rsts-background', '')
+						.attr('data-rsts-position', $this.attr('data-rsts-position'))
 						.attr('data-rsts-scale-mode', $this.attr('data-rsts-scale-mode'))
 						.insertBefore($this);
 				}
 				$this.detach();
 			});
+		}
+
+		if (
+			this.type === 'video'
+			&& !this.content.attr('data-rsts-video')
+			// Check if video element is supported
+			&& !document.createElement('video').canPlayType
+		) {
+			this.element.find('video').each(function() {
+				var $this = $(this);
+				// No fallback image exists
+				if (!$this.find('img').length) {
+					$(document.createElement('img'))
+						.attr('src', $this.attr('poster'))
+						.attr('data-rsts-position', $this.attr('data-rsts-position'))
+						.attr('data-rsts-scale-mode', $this.attr('data-rsts-scale-mode'))
+						.appendTo($this);
+				}
+			});
+			this.type = 'image';
 		}
 
 		this.backgrounds = [];
@@ -166,6 +187,20 @@ Rst.Slide = (function() {
 			}
 		}
 
+		if (!this.data.thumbUrl && this.type === 'video') {
+			if (
+				!this.content.attr('data-rsts-video')
+				&& this.element.find('video').last().attr('poster')
+			) {
+				this.data.thumbUrl = this.element.find('video').last().attr('poster');
+			}
+			else if (this.element.find('img').last().length) {
+				this.data.thumbUrl =
+					this.element.find('img').last().attr('data-rsts-thumb')
+					|| this.element.find('img').last().attr('src');
+			}
+		}
+
 		if (this.data.name && this.slider.options.captions) {
 			$(document.createElement('div'))
 				.addClass(this.slider.options.cssPrefix + 'caption')
@@ -200,8 +235,8 @@ Rst.Slide = (function() {
 		if (this.type === 'video') {
 
 			this.data.video = this.content.attr('data-rsts-video');
-			$(document.createElement('a'))
-				.attr('href', this.data.video)
+			this.videoStartButton = $(document.createElement('a'))
+				.attr('href', this.data.video || '')
 				.text('play')
 				.addClass(this.slider.options.cssPrefix + 'video-play')
 				.on('click', function(event) {
@@ -209,6 +244,10 @@ Rst.Slide = (function() {
 					self.startVideo();
 				})
 				.appendTo(this.element);
+
+			if (!this.data.video && this.element.find('video').last().length) {
+				this.element.find('video').last()[0].controls = false;
+			}
 
 		}
 
@@ -334,7 +373,13 @@ Rst.Slide = (function() {
 			this.content.css(css);
 		}
 
-		if (this.type === 'image' || this.type === 'video') {
+		if (this.type === 'video' && !this.data.video) {
+			this.element.find('video').last().css({
+				width: x,
+				height: y
+			});
+		}
+		else if (this.type === 'image' || this.type === 'video') {
 			this.scaleImage(this.element.find('img').last(), x, y);
 		}
 
@@ -555,6 +600,12 @@ Rst.Slide = (function() {
 			$(window).off('message.' + this.eventNamespace);
 			delete this.eventNamespace;
 		}
+		if (!this.data.video) {
+			var video = this.element.find('video').last();
+			video[0].controls = false;
+			video[0].pause();
+			video[0].currentTime = 0;
+		}
 		if (this.videoElement) {
 			// IE bugfix
 			this.videoElement.attr('src', '');
@@ -564,6 +615,9 @@ Rst.Slide = (function() {
 		if (this.videoStopButton) {
 			this.videoStopButton.remove();
 			delete this.videoStopButton;
+		}
+		if (this.videoStartButton) {
+			this.videoStartButton.css('display', '');
 		}
 
 		this.slider.elements.main.removeClass(
@@ -590,7 +644,15 @@ Rst.Slide = (function() {
 
 		this.slider.stopAutoplay(true);
 
-		if ((matches = this.data.video.match(this.videoRegExp.youtube))) {
+		if (!this.data.video) {
+
+			var video = this.element.find('video').last();
+			video[0].controls = true;
+			video[0].play();
+			this.videoStartButton.css('display', 'none');
+
+		}
+		else if ((matches = this.data.video.match(this.videoRegExp.youtube))) {
 
 			this.element.addClass(this.slider.options.cssPrefix + 'video-youtube');
 

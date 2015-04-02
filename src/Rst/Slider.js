@@ -1575,6 +1575,8 @@ Rst.Slider = (function() {
 			}
 		}
 
+		this.nav.resize();
+
 		var size = this.getViewSize(this.slideIndex);
 
 		// Calculate the normalized size of all slides
