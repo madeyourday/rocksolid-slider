@@ -165,7 +165,8 @@
 				background-color: rgba(#51a5c0, 0.5)
 
 	.rsts-nav
-		.rsts-nav-prev, .rsts-nav-next
+		.rsts-nav-prev, .rsts-nav-next,
+		.rsts-thumbs-prev, .rsts-thumbs-next
 			display: none
 
 	.rsts-video-play
@@ -225,3 +226,6 @@
 			background-color: white
 		&.rsts-progress-active
 			+opacity(0.3)
+
+	.rsts-thumbs-slide.rsts-thumbs-active-thumb
+		+opacity(0.25)

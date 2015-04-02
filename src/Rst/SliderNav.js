@@ -55,41 +55,69 @@ Rst.SliderNav = (function() {
 					slider.options.cssPrefix + 'nav-' + slider.options.navType
 				);
 
-			this.elements.mainPrev = $(document.createElement('a'))
-				.attr('href', '')
-				.text('prev')
-				.on('click', function(event){
-					event.preventDefault();
-					self.slider.prev();
-				})
-				.appendTo(
-					$(document.createElement('li'))
-						.addClass(slider.options.cssPrefix + 'nav-prev')
+			if (slider.options.navType === 'thumbs') {
+				this.elements.thumbs = $(document.createElement('div'));
+				$.each(this.slider.getSlides(), function(i, slide){
+					self.createThumb(i, slide).appendTo(self.elements.thumbs);
+				});
+				this.elements.main.append(this.elements.thumbs);
+
+				slider.elements.main.append(this.elements.main);
+
+				this.thumbsSlider = new Rst.Slider(
+					this.elements.thumbs,
+					$.extend({
+						// Inherit options:
+						visibleArea: slider.options.visibleArea,
+						visibleAreaMax: slider.options.visibleAreaMax,
+						loop: slider.options.loop,
+						duration: slider.options.duration,
+						controls: slider.options.controls
+					}, slider.options.thumbs || {})
 				);
+				this.setActive([0]);
 
-			this.elements.mainNext = $(document.createElement('a'))
-				.attr('href', '')
-				.text('next')
-				.on('click', function(event){
-					event.preventDefault();
-					self.slider.next();
-				})
-				.appendTo(
-					$(document.createElement('li'))
-						.addClass(slider.options.cssPrefix + 'nav-next')
-				);
+			}
+			else {
 
-			var navUl = document.createElement('ul');
-			$.each(this.slider.getSlides(), function(i, slide){
-				self.elements[i] = self.createNavItem(i, slide.getData())
-					.appendTo(navUl);
-			});
+				this.elements.mainPrev = $(document.createElement('a'))
+					.attr('href', '')
+					.text('prev')
+					.on('click', function(event){
+						event.preventDefault();
+						self.slider.prev();
+					})
+					.appendTo(
+						$(document.createElement('li'))
+							.addClass(slider.options.cssPrefix + 'nav-prev')
+					);
 
-			this.elements.mainPrev.parent().prependTo(navUl);
-			this.elements.mainNext.parent().appendTo(navUl);
+				this.elements.mainNext = $(document.createElement('a'))
+					.attr('href', '')
+					.text('next')
+					.on('click', function(event){
+						event.preventDefault();
+						self.slider.next();
+					})
+					.appendTo(
+						$(document.createElement('li'))
+							.addClass(slider.options.cssPrefix + 'nav-next')
+					);
 
-			this.elements.main.append(navUl);
-			slider.elements.main.append(this.elements.main);
+				var navUl = document.createElement('ul');
+				$.each(this.slider.getSlides(), function(i, slide){
+					self.elements[i] = self.createNavItem(i, slide.getData())
+						.appendTo(navUl);
+				});
+
+				this.elements.mainPrev.parent().prependTo(navUl);
+				this.elements.mainNext.parent().appendTo(navUl);
+
+				this.elements.main.append(navUl);
+
+				slider.elements.main.append(this.elements.main);
+
+			}
 
 		}
 
@@ -102,6 +130,48 @@ Rst.SliderNav = (function() {
 
 		var self = this;
 		var slides = this.slider.getSlides();
+
+		if (this.slider.options.navType === 'thumbs') {
+
+			var visibleCount = this.thumbsSlider.getVisibleCount();
+			var rowsCount = this.thumbsSlider.getVisibleRowsCount();
+			var goTo = indexes[Math.floor((indexes.length - 1) / 2)] - Math.floor(
+				(visibleCount - 1) / 2
+			);
+
+			if (!this.thumbsSlider.options.loop) {
+				goTo = Math.min(
+					this.thumbsSlider.slides.length - visibleCount,
+					Math.max(0, goTo)
+				);
+			}
+			else {
+				goTo = this.thumbsSlider.getSlideIndex(goTo);
+				goTo = this.getNearestIndex(
+					goTo,
+					this.thumbsSlider.slideIndex,
+					this.thumbsSlider.getSlides().length
+				);
+			}
+
+			goTo -= (((
+				(goTo + Math.floor(rowsCount / 2) - this.thumbsSlider.slideIndex)
+			% rowsCount) + rowsCount) % rowsCount) - Math.floor(rowsCount / 2);
+
+			$.each(this.activeIndexes || [], function(i, index) {
+				self.thumbsSlider.getSlide(index).element.removeClass(
+					self.thumbsSlider.options.cssPrefix + 'active-thumb'
+				);
+			});
+			$.each(indexes, function(i, index) {
+				self.thumbsSlider.getSlide(index).element.addClass(
+					self.thumbsSlider.options.cssPrefix + 'active-thumb'
+				);
+			});
+
+			this.thumbsSlider.goTo(goTo);
+
+		}
 
 		if (this.activeIndexes) {
 			$.each(this.activeIndexes, function(i, index) {
@@ -144,6 +214,19 @@ Rst.SliderNav = (function() {
 			this.elements[slides.length].children('a').addClass('active');
 		}
 
+	};
+
+	/**
+	 * get nearest index, return value may overflow negative or positive
+	 */
+	SliderNav.prototype.getNearestIndex = function(goTo, index, length) {
+		if (Math.abs(goTo - index) > Math.abs(goTo - length - index)) {
+			goTo -= length;
+		}
+		else if (Math.abs(goTo - index) > Math.abs(goTo + length - index)) {
+			goTo += length;
+		}
+		return goTo;
 	};
 
 	/**
@@ -246,27 +329,64 @@ Rst.SliderNav = (function() {
 				)
 				.on('click', function(event){
 					event.preventDefault();
-					var visibleCount = self.slider.getVisibleCount();
-					var goTo = index - Math.floor(
-						(visibleCount - 1) / 2
-					);
-					if (!self.slider.options.loop) {
-						goTo = Math.min(
-							self.slider.slides.length - visibleCount,
-							Math.max(0, goTo)
-						);
-					}
-					else {
-						if (goTo < 0) {
-							goTo += self.slider.slides.length;
-						}
-						else if (goTo >= self.slider.slides.length) {
-							goTo -= self.slider.slides.length;
-						}
-					}
-					self.slider.goTo(goTo);
+					self.itemOnClick(index);
 				})
 			);
+
+	};
+
+	/**
+	 * set
+	 * @return jQuery element
+	 */
+	SliderNav.prototype.createThumb = function(index, slide) {
+
+		var self = this;
+
+		return $(document.createElement('a'))
+			.attr('href', '')
+			.attr('data-rsts-type', 'image')
+			.append($(document.createElement('img'))
+				.attr('src', slide.getThumbUrl())
+				.attr('alt', slide.getData().name)
+			)
+			.on('click', function(event){
+				event.preventDefault();
+				self.itemOnClick(index);
+			});
+
+	};
+
+	/**
+	 * navigation item onclick handler
+	 */
+	SliderNav.prototype.itemOnClick = function(index) {
+
+		var visibleCount = this.slider.getVisibleCount();
+		var rowsCount = this.slider.getVisibleRowsCount();
+		var goTo = index - Math.floor(
+			(visibleCount - 1) / 2
+		);
+
+		if (!this.slider.options.loop) {
+			goTo = Math.min(
+				this.slider.slides.length - visibleCount,
+				Math.max(0, goTo)
+			);
+		}
+		else {
+			goTo = this.getNearestIndex(
+				this.slider.getSlideIndex(goTo),
+				this.slider.slideIndex,
+				this.slider.getSlides().length
+			);
+		}
+
+		goTo -= (((
+			(goTo + Math.floor(rowsCount / 2) - this.slider.slideIndex)
+		% rowsCount) + rowsCount) % rowsCount) - Math.floor(rowsCount / 2);
+
+		this.slider.goTo(goTo);
 
 	};
 

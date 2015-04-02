@@ -23,7 +23,7 @@ Rst.Slider = (function() {
 		this.elements = {};
 
 		this.elements.main = element;
-		this.options = $.extend({}, this.defaultOptions, options);
+		this.options = $.extend(true, {}, this.defaultOptions, options);
 
 		if (this.options.height === 'auto' && this.options.direction === 'y') {
 			throw new Error('height "auto" with direction "y" ist not possible');
@@ -332,7 +332,22 @@ Rst.Slider = (function() {
 		// true to enable keyboard arrow navigation
 		keyboard: true,
 		// true to enable caption elements inside slides
-		captions: true
+		captions: true,
+		// options for the thumbnail slider (same as main slider options)
+		// the following options inherit from the main options:
+		// visibleArea, visibleAreaMax, loop, duration, controls
+		thumbs: {
+			cssPrefix: 'rsts-thumbs-',
+			navType: 'none',
+			slideMinSize: 75,
+			preloadSlides: 10,
+			gapSize: 5,
+			width: '100%',
+			height: '1x1',
+			scaleMode: 'crop',
+			keyboard: false,
+			captions: false
+		}
 	};
 
 	/**
@@ -487,6 +502,8 @@ Rst.Slider = (function() {
 		else {
 			this.modify(this.slides[this.slideIndex].element, {}, true);
 		}
+
+		this.nav.setActive(activeSlides);
 
 		if (this.autoSize) {
 			this.modify(this.elements.crop, {

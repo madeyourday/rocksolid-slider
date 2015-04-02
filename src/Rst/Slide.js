@@ -31,6 +31,7 @@ Rst.Slide = (function() {
 
 		if (element.nodeName.toLowerCase() === 'script' && element.type === 'text/html') {
 			this.contentHtml = element.innerHTML.replace(/\\(.)/gi, '$1');
+			this.data.thumbUrl = $(element).attr('data-rsts-thumb') || undefined;
 		}
 		else {
 			this.init(element);
@@ -151,8 +152,18 @@ Rst.Slide = (function() {
 			}
 		});
 
+		if (this.content.attr('data-rsts-thumb')) {
+			this.data.thumbUrl = this.content.attr('data-rsts-thumb');
+		}
+
 		if (this.type === 'image') {
 			this.data.name = this.data.name || this.element.find('img').last().attr('alt');
+			if (this.element.find('img').last().attr('data-rsts-thumb')) {
+				this.data.thumbUrl = this.element.find('img').last().attr('data-rsts-thumb');
+			}
+			if (!this.data.thumbUrl) {
+				this.data.thumbUrl = this.element.find('img').last().attr('src');
+			}
 		}
 
 		if (this.data.name && this.slider.options.captions) {
@@ -713,6 +724,13 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.getData = function() {
 		return this.data;
+	};
+
+	/**
+	 * @return string URL to thumbnail image
+	 */
+	Slide.prototype.getThumbUrl = function() {
+		return this.data.thumbUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=';
 	};
 
 	return Slide;
