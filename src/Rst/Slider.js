@@ -34,6 +34,7 @@ Rst.Slider = (function() {
 			this.options.visibleAreaMax = 0;
 			this.options.slideMaxCount = 0;
 			this.options.slideMinSize = 0;
+			this.options.slideMaxSize = 0;
 			this.options.rowMaxCount = 0;
 			this.options.rowMinSize = 0;
 			this.options.rowSlideRatio = 0;
@@ -287,6 +288,8 @@ Rst.Slider = (function() {
 		slideMaxCount: 0,
 		// minimal size of one slide in px
 		slideMinSize: 0,
+		// maximum size of one slide in px
+		slideMaxSize: 0,
 		// maximum number of visible rows
 		rowMaxCount: 0,
 		// minimal size of one row in px
@@ -339,7 +342,7 @@ Rst.Slider = (function() {
 		thumbs: {
 			cssPrefix: 'rsts-thumbs-',
 			navType: 'none',
-			slideMinSize: 75,
+			slideMaxSize: 50,
 			preloadSlides: 10,
 			gapSize: 5,
 			width: '100%',
@@ -1263,7 +1266,7 @@ Rst.Slider = (function() {
 	 */
 	Slider.prototype.getVisibleSlidesCount = function() {
 
-		if (!this.options.slideMaxCount && !this.options.slideMinSize) {
+		if (!this.options.slideMaxCount && !this.options.slideMinSize && !this.options.slideMaxSize) {
 			return 1;
 		}
 
@@ -1274,8 +1277,18 @@ Rst.Slider = (function() {
 		var gapSize = this.getGapSize();
 		var count = this.options.slideMaxCount;
 
-		if (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinSize) {
+		if (
+			this.options.slideMinSize
+			&& (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinSize)
+		) {
 			count = Math.floor((size + gapSize) / (this.options.slideMinSize + gapSize));
+		}
+
+		if (
+			this.options.slideMaxSize
+			&& (!count || (size - (gapSize * (count - 1))) / count > this.options.slideMaxSize)
+		) {
+			count = Math.ceil((size + gapSize) / (this.options.slideMaxSize + gapSize));
 		}
 
 		return Math.min(this.slides.length, Math.max(1, count));
@@ -1369,6 +1382,10 @@ Rst.Slider = (function() {
 			y = undefined;
 		}
 
+		this.viewSizeFixedCache = {x: x, y: y};
+
+		var gapSize = this.getGapSize();
+
 		this.visibleAreaRate = this.options.visibleArea;
 		if (
 			this.options.visibleAreaMax
@@ -1378,10 +1395,17 @@ Rst.Slider = (function() {
 			this.visibleAreaRate = this.options.visibleAreaMax /
 				(this.options.direction === 'x' ? x : y);
 		}
+		if (
+			this.options.slideMaxSize
+			&& (this.options.direction === 'x' ? x : y) * this.visibleAreaRate
+				> this.slides.length * (this.options.slideMaxSize + gapSize) - gapSize
+		) {
+			this.visibleAreaRate = (this.slides.length
+				* (this.options.slideMaxSize + gapSize)
+				- gapSize
+			) / (this.options.direction === 'x' ? x : y);
+		}
 
-		this.viewSizeFixedCache = {x: x, y: y};
-
-		var gapSize = this.getGapSize();
 		var visibleCount = this.getVisibleSlidesCount();
 		var visibleRowsCount = this.getVisibleRowsCount();
 
