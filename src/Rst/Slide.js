@@ -247,6 +247,9 @@ Rst.Slide = (function() {
 
 			if (!this.data.video && this.element.find('video').last().length) {
 				this.element.find('video').last()[0].controls = false;
+				this.element.find('video').last().on('ended', function() {
+					self.stopVideo(true);
+				});
 			}
 
 		}
@@ -376,7 +379,8 @@ Rst.Slide = (function() {
 		if (this.type === 'video' && !this.data.video) {
 			this.element.find('video').last().css({
 				width: x,
-				height: y
+				height: y,
+				display: 'block'
 			});
 		}
 		else if (this.type === 'image' || this.type === 'video') {
@@ -596,6 +600,11 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.stopVideo = function(fromApi, fromButton) {
 
+		if (!this.isVideoPlaying) {
+			return;
+		}
+		this.isVideoPlaying = false;
+
 		if (this.eventNamespace) {
 			$(window).off('message.' + this.eventNamespace);
 			delete this.eventNamespace;
@@ -641,6 +650,11 @@ Rst.Slide = (function() {
 
 		var self = this;
 		var videoId, apiCallback, matches, time;
+
+		if (this.isVideoPlaying) {
+			return;
+		}
+		this.isVideoPlaying = true;
 
 		this.slider.stopAutoplay(true);
 
@@ -759,7 +773,7 @@ Rst.Slide = (function() {
 		}
 
 		this.videoStopButton = $(document.createElement('a'))
-			.attr('href', this.data.video)
+			.attr('href', this.data.video || '')
 			.text('stop')
 			.addClass(this.slider.options.cssPrefix + 'video-stop')
 			.on('click', function(event) {

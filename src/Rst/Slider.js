@@ -162,6 +162,8 @@ Rst.Slider = (function() {
 				.appendTo(this.elements.main);
 		}
 
+		this.autoplay();
+
 		this.preloadSlides(this.slideIndex);
 		// Sets active states
 		this.cleanupSlides();
@@ -205,8 +207,6 @@ Rst.Slider = (function() {
 				transform: 'translateZ(0)'
 			});
 		}
-
-		this.autoplay();
 
 		if (this.options.pauseAutoplayOnHover) {
 			this.elements.view.on('mouseenter', function() {
