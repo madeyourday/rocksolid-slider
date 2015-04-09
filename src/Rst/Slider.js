@@ -1955,9 +1955,13 @@ Rst.Slider = (function() {
 		this.isDragging = false;
 		this.elements.main.removeClass(this.options.cssPrefix + 'dragging');
 
+		if (this.dragLastDiff === 0 || this.dragLastDiff === undefined) {
+			return;
+		}
+
 		var leftSlideIndex = this.slideIndex + (Math.floor(
 			(
-				- this.getOffset(this.elements.slides)
+				- Math.round(this.getOffset(this.elements.slides))
 				- this.activeSlideOffset
 				+ (
 					this.getViewSizeFixed(true)[this.options.direction]
