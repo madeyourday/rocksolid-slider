@@ -614,6 +614,11 @@ Rst.Slide = (function() {
 			video[0].controls = false;
 			video[0].pause();
 			video[0].currentTime = 0;
+			if (video[0].poster) {
+				// Brings the poster image back
+				video[0].src = '';
+				video.removeAttr('src');
+			}
 		}
 		if (this.videoElement) {
 			// IE bugfix
