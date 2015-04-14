@@ -1562,7 +1562,11 @@ Rst.Slider = (function() {
 			&& $.inArray(slideIndex, this.getActiveSlides()) === -1
 			&& !this.normalizeSize
 		) {
-			// Don't resize if the source slide doesn't affect the size
+			this.getSlide(slideIndex).size(
+				this.options.direction === 'x' ? this.slideSize : this.rowSize,
+				this.options.direction !== 'x' ? this.slideSize : this.rowSize
+			);
+			// Don't resize the whole slider if the source slide doesn't affect the size
 			return;
 		}
 
