@@ -1926,9 +1926,8 @@ Rst.Slider = (function() {
 
 		var pos = this.getPositionFromEvent(event);
 
-		this.elements.main.addClass(this.options.cssPrefix + 'dragging');
-
 		this.isDragging = true;
+		this.isDraggingStarted = false;
 		this.dragStartPos = {
 			x: pos.x - this.elements.slides.offset().left + this.elements.crop.offset().left,
 			y: pos.y - this.elements.slides.offset().top + this.elements.crop.offset().top
@@ -1957,6 +1956,7 @@ Rst.Slider = (function() {
 		}
 
 		this.isDragging = false;
+		this.isDraggingStarted = false;
 		this.elements.main.removeClass(this.options.cssPrefix + 'dragging');
 
 		if (this.dragLastDiff === 0 || this.dragLastDiff === undefined) {
@@ -2025,6 +2025,15 @@ Rst.Slider = (function() {
 		}
 		else {
 			return this.onDragStop();
+		}
+
+		if (!this.isDraggingStarted) {
+			this.isDraggingStarted = true;
+			this.elements.main.addClass(this.options.cssPrefix + 'dragging');
+			(function() {
+				var selection = (window.getSelection && window.getSelection()) || document.selection || {};
+				(selection.empty || selection.removeAllRanges || function() {}).apply(selection);
+			})();
 		}
 
 		var posDiff = this.dragLastPos - pos[this.options.direction];
