@@ -162,8 +162,6 @@ Rst.Slider = (function() {
 				.appendTo(this.elements.main);
 		}
 
-		this.autoplay();
-
 		this.preloadSlides(this.slideIndex);
 		// Sets active states
 		this.cleanupSlides();
@@ -174,6 +172,8 @@ Rst.Slider = (function() {
 		this.nav.combineItems();
 		// Resize again for edge cases when combineItems changed the nav height
 		this.resize();
+
+		this.autoplay();
 
 		$(window).on('domready.rsts load.rsts', function(){
 			if (self.windowSizeHasChanged()) {
@@ -627,7 +627,7 @@ Rst.Slider = (function() {
 
 		var self = this;
 
-		if (!this.options.autoplay) {
+		if (!this.options.autoplay || this.getVisibleCount() >= this.slides.length) {
 			return;
 		}
 
@@ -1709,9 +1709,14 @@ Rst.Slider = (function() {
 
 		if (this.getVisibleCount() >= this.slides.length) {
 			this.nav.hide();
+			this.stopAutoplay(true);
 		}
 		else {
 			this.nav.show();
+			if (visibleCountBefore >= this.slides.length) {
+				// restart autoplay
+				this.stopAutoplay();
+			}
 		}
 
 		if (visibleCountBefore !== this.getVisibleCount()) {
