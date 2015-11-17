@@ -687,7 +687,7 @@ Rst.Slide = (function() {
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
-					'http://www.youtube.com/embed/' +
+					'https://www.youtube.com/embed/' +
 					videoId +
 					'?autoplay=1&enablejsapi=1&wmode=opaque' +
 					(time ? '&start=' + time : '')
@@ -733,7 +733,7 @@ Rst.Slide = (function() {
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
 				.attr('src',
-					'http://player.vimeo.com/video/' +
+					'https://player.vimeo.com/video/' +
 					videoId +
 					'?autoplay=1&api=1' +
 					(time ? '#t=' + time : '')
