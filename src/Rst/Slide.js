@@ -260,8 +260,10 @@ Rst.Slide = (function() {
 	 * @var object regular expressions for video URLs
 	 */
 	Slide.prototype.videoRegExp = {
-		youtube: /^https?:\/\/(?:www\.youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\?|#|\/)(?:(?:.*[?&#]|)t=([0-9hms]+))?/i,
-		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)(?:.*#t=([0-9hms]+))?/i
+		youtube: /^https?:\/\/(?:(?:www\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\?|#|\/)(?:(?:.*[?&#]|)t=([0-9hms]+))?/i,
+		youtubePlayer: /^https?:\/\/(?:www\.)?youtube\.com\/embed\/[0-9a-z_\-]{11}/i,
+		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)(?:.*#t=([0-9hms]+))?/i,
+		vimeoPlayer: /^https?:\/\/player\.vimeo\.com\/video\/[0-9]+/i
 	};
 
 	/**
@@ -654,7 +656,7 @@ Rst.Slide = (function() {
 	Slide.prototype.startVideo = function() {
 
 		var self = this;
-		var videoId, apiCallback, matches, time;
+		var videoId, apiCallback, matches, time, src;
 
 		if (this.isVideoPlaying) {
 			return;
@@ -684,14 +686,28 @@ Rst.Slide = (function() {
 				time[2] = parseInt(time[2] || 0, 10);
 				time = time[0] + (time[1] * 60) + (time[2] * 60 * 60);
 			}
+
+			src = 'https://www.youtube.com/embed/' + videoId;
+			if (this.data.video.match(this.videoRegExp.youtubePlayer)) {
+				src = this.data.video;
+			}
+
+			if (!src.match(/[?&]autoplay=/i)) {
+				src += (src.match(/\?/) ? '&' : '?') + 'autoplay=1';
+			}
+			if (!src.match(/[?&]enablejsapi=/i)) {
+				src += '&enablejsapi=1';
+			}
+			if (!src.match(/[?&]wmode=/i)) {
+				src += '&wmode=opaque';
+			}
+			if (time && !src.match(/[?&]start=/i)) {
+				src += '&start=' + time;
+			}
+
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
-				.attr('src',
-					'https://www.youtube.com/embed/' +
-					videoId +
-					'?autoplay=1&enablejsapi=1&wmode=opaque' +
-					(time ? '&start=' + time : '')
-				)
+				.attr('src', src)
 				.attr('frameborder', 0)
 				.attr('allowfullscreen', 'allowfullscreen')
 				.appendTo(this.element);
@@ -730,14 +746,25 @@ Rst.Slide = (function() {
 
 			videoId = matches[1];
 			time = matches[2];
+
+			src = 'https://player.vimeo.com/video/' + videoId;
+			if (this.data.video.match(this.videoRegExp.vimeoPlayer)) {
+				src = this.data.video;
+			}
+
+			if (!src.match(/[?&]autoplay=/i)) {
+				src += (src.match(/\?/) ? '&' : '?') + 'autoplay=1';
+			}
+			if (!src.match(/[?&]api=/i)) {
+				src += '&api=1';
+			}
+			if (time && !src.match(/#t=/i)) {
+				src += '#t=' + time;
+			}
+
 			this.videoElement = $(document.createElement('iframe'))
 				.addClass(this.slider.options.cssPrefix + 'video-iframe')
-				.attr('src',
-					'https://player.vimeo.com/video/' +
-					videoId +
-					'?autoplay=1&api=1' +
-					(time ? '#t=' + time : '')
-				)
+				.attr('src', src)
 				.attr('frameborder', 0)
 				.attr('allowfullscreen', 'allowfullscreen')
 				.appendTo(this.element);
