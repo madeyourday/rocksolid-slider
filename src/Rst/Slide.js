@@ -208,7 +208,10 @@ Rst.Slide = (function() {
 				.appendTo(this.element);
 		}
 
+		var mediaLoadEventFired = false;
 		var mediaLoadEvent = function() {
+
+			mediaLoadEventFired = true;
 
 			self.slider.resize(self.data.index);
 
@@ -226,6 +229,15 @@ Rst.Slide = (function() {
 
 		this.element.find('img').on('load', mediaLoadEvent);
 		this.element.find('video').on('loadedmetadata', mediaLoadEvent);
+
+		// Fix IE11 bug with missing load event, see #33
+		if (this.element.find('img').length && !this.element.find('img')[0].complete) {
+			setTimeout(function() {
+				if (!mediaLoadEventFired && self.element.find('img')[0].complete) {
+					mediaLoadEvent();
+				}
+			}, 1000);
+		}
 
 		var headlines = this.element.find('h1,h2,h3,h4,h5,h6');
 		if (! this.data.name && headlines.length) {
