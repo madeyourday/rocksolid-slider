@@ -256,7 +256,7 @@ Rst.Slider = (function() {
 	 * @var object default options
 	 */
 	Slider.prototype.defaultOptions = {
-		// slider type (slide, side-slide, fade or none)
+		// slider type (slide, side-slide, fade, fade-in-out or none)
 		type: 'slide',
 		// "x" for horizontal or "y" for vertical
 		direction: 'x',
@@ -491,7 +491,14 @@ Rst.Slider = (function() {
 				offset: targetPos
 			}, true, durationScale, fromDrag, !fromDrag && overflow);
 		}
-		else if (this.options.type === 'fade') {
+		else if (this.options.type === 'fade' || this.options.type === 'fade-in-out') {
+			if (this.options.type === 'fade-in-out') {
+				$.each(activeSlidesBefore, function(i, slideIndex) {
+					if (activeSlides.indexOf(slideIndex) === -1) {
+						self.modify(self.slides[slideIndex].element, {opacity: 0}, true);
+					}
+				});
+			}
 			this.modify(this.slides[this.slideIndex].element, {opacity: 1}, true);
 		}
 		else if (this.options.type === 'side-slide') {
@@ -1059,7 +1066,7 @@ Rst.Slider = (function() {
 
 			// Check if the slide isn't already injected
 			if (!slide.isInjected()) {
-				if (self.options.type === 'fade') {
+				if (self.options.type === 'fade' || self.options.type === 'fade-in-out') {
 					self.modify(slide.element, {opacity: 0});
 				}
 				self.elements.slides.append(slide.element);
@@ -1070,7 +1077,7 @@ Rst.Slider = (function() {
 				i === self.slideIndex &&
 				slide.element.next().length
 			) {
-				if (self.options.type === 'fade') {
+				if (self.options.type === 'fade' || self.options.type === 'fade-in-out') {
 					if (slide.element.next().length === 1) {
 						self.modify(slide.element, {opacity: 1 - slide.element.next().css('opacity')});
 						self.modify(slide.element.next(), {opacity: 1});
@@ -1137,7 +1144,7 @@ Rst.Slider = (function() {
 			$.merge(allClasses, slide.data.sliderClasses);
 			if (slide.isInjected() && $.inArray(i, keepSlides) === -1) {
 				if (
-					self.options.type === 'fade' &&
+					(self.options.type === 'fade' || self.options.type === 'fade-in-out') &&
 					self.slides[self.slideIndex].element.css('opacity') < 1
 				) {
 					return;
