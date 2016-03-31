@@ -305,6 +305,13 @@ Rst.Slide = (function() {
 
 		this.updateResponsiveImages(true);
 
+		if (!this.isInjected()) {
+			return {
+				x: ret ? (x || 0) : x,
+				y: ret ? (y || 0) : y
+			};
+		}
+
 		if (x && ! y) {
 			this.slider.modify(this.element, {width: x, height: ''});
 			this.scaleContent(x, y);
