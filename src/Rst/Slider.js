@@ -262,6 +262,8 @@ Rst.Slider = (function() {
 		visibleArea: 1,
 		// maximum size of the area for the visible slide in px
 		visibleAreaMax: 0,
+		// Alignment of the visible area (0 = start, 0.5 = center, 1 = end)
+		visibleAreaAlign: 0.5,
 		// if true the slides get shuffled once on initialization
 		random: false,
 		// if true the slider loops infinitely
@@ -336,7 +338,7 @@ Rst.Slider = (function() {
 		captions: true,
 		// options for the thumbnail slider (same as main slider options)
 		// the following options inherit from the main options:
-		// visibleArea, visibleAreaMax, loop, duration, controls
+		// visibleArea, visibleAreaMax, visibleAreaAlign, loop, duration, controls
 		thumbs: {
 			cssPrefix: 'rsts-thumbs-',
 			navType: 'none',
@@ -473,7 +475,7 @@ Rst.Slider = (function() {
 		var targetPos = - this.getSlideOffset(index)
 			+ Math.round(
 				size[this.options.direction]
-				* (1 - this.visibleAreaRate) / 2
+				* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 			);
 
 		if (fromDrag && !overflow) {
@@ -1588,7 +1590,7 @@ Rst.Slider = (function() {
 		var slidesOffsetBefore = -this.getSlideOffset(this.slideIndex)
 			+ Math.round(
 				this.getViewSizeFixed(true)[this.options.direction]
-				* (1 - this.visibleAreaRate) / 2
+				* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 			);
 		var width, height;
 		var pauseAutoplay = !this.autoplayPaused;
@@ -1686,18 +1688,18 @@ Rst.Slider = (function() {
 
 		if (this.options.direction === 'x') {
 			this.modify(this.elements.overlayPrev, {
-				width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
+				width: Math.round(size.x * (1 - this.visibleAreaRate) * this.options.visibleAreaAlign)
 			});
 			this.modify(this.elements.overlayNext, {
-				width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
+				width: Math.round(size.x * (1 - this.visibleAreaRate) * (1 - this.options.visibleAreaAlign))
 			});
 		}
 		else {
 			this.modify(this.elements.overlayPrev, {
-				height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
+				height: Math.round(size.y * (1 - this.visibleAreaRate) * this.options.visibleAreaAlign)
 			});
 			this.modify(this.elements.overlayNext, {
-				height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
+				height: Math.round(size.y * (1 - this.visibleAreaRate) * (1 - this.options.visibleAreaAlign))
 			});
 		}
 
@@ -1729,7 +1731,7 @@ Rst.Slider = (function() {
 		var slidesOffsetTarget = -this.getSlideOffset(this.slideIndex)
 			+ Math.round(
 				backupSize
-				* (1 - this.visibleAreaRate) / 2
+				* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 			);
 
 		if (this.options.type === 'slide' && (
@@ -2009,7 +2011,7 @@ Rst.Slider = (function() {
 				+ (
 					this.getViewSizeFixed(true)[this.options.direction]
 					* (1 - this.visibleAreaRate)
-					/ 2
+					* this.options.visibleAreaAlign
 				)
 			) /
 			(this.slideSize + this.getGapSize())
@@ -2084,23 +2086,23 @@ Rst.Slider = (function() {
 		if (!this.options.loop) {
 			if (slidesPos > - this.getSlideOffset(0) + (
 				this.getViewSizeFixed(true)[this.options.direction]
-				* (1 - this.visibleAreaRate) / 2
+				* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 			)) {
 				slidesPos = (slidesPos * 0.4) - (
 					(this.getSlideOffset(0) - (
 						this.getViewSizeFixed(true)[this.options.direction]
-						* (1 - this.visibleAreaRate) / 2
+						* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 					)) * 0.6
 				);
 			}
 			if (slidesPos < - this.getSlideOffset(this.slides.length - visibleCount) + (
 				this.getViewSizeFixed(true)[this.options.direction]
-				* (1 - this.visibleAreaRate) / 2
+				* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 			)) {
 				slidesPos = (slidesPos * 0.4) - (
 					(this.getSlideOffset(this.slides.length - visibleCount) - (
 						this.getViewSizeFixed(true)[this.options.direction]
-						* (1 - this.visibleAreaRate) / 2
+						* (1 - this.visibleAreaRate) * this.options.visibleAreaAlign
 					)) * 0.6
 				);
 			}

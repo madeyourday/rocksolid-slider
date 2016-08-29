@@ -70,6 +70,7 @@ Rst.SliderNav = (function() {
 						// Inherit options:
 						visibleArea: slider.options.visibleArea,
 						visibleAreaMax: slider.options.visibleAreaMax,
+						visibleAreaAlign: slider.options.visibleAreaAlign,
 						loop: slider.options.loop,
 						duration: slider.options.duration,
 						controls: slider.options.controls
