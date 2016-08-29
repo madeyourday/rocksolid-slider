@@ -33,6 +33,7 @@ Rst.Slide = (function() {
 			this.contentHtml = element.innerHTML.replace(/\\(.)/gi, '$1');
 			this.data.name = $(element).attr('data-rsts-name') || undefined;
 			this.data.thumbUrl = $(element).attr('data-rsts-thumb') || undefined;
+			this.data.thumbHtml = $(element).attr('data-rsts-thumb-html') || undefined;
 		}
 		else {
 			this.init(element);
@@ -176,6 +177,10 @@ Rst.Slide = (function() {
 
 		if (this.content.attr('data-rsts-thumb')) {
 			this.data.thumbUrl = this.content.attr('data-rsts-thumb');
+		}
+
+		if (this.content.attr('data-rsts-thumb-html')) {
+			this.data.thumbHtml = this.content.attr('data-rsts-thumb-html');
 		}
 
 		if (this.type === 'image') {
@@ -859,6 +864,17 @@ Rst.Slide = (function() {
 	 */
 	Slide.prototype.getThumbUrl = function() {
 		return this.data.thumbUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=';
+	};
+
+	/**
+	 * @return string HTML of thumbnail
+	 */
+	Slide.prototype.getThumbHtml = function() {
+		return this.data.thumbHtml || $(document.createElement('div')).append(
+			$(document.createElement('img'))
+				.attr('src', this.getThumbUrl())
+				.attr('alt', this.data.name)
+		).html();
 	};
 
 	return Slide;

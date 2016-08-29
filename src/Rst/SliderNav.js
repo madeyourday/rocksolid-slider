@@ -345,18 +345,37 @@ Rst.SliderNav = (function() {
 
 		var self = this;
 
-		return $(document.createElement('a'))
+		var thumb = $(document.createElement('a'))
 			.attr('href', '')
-			.attr('data-rsts-type', 'image')
-			.append($(document.createElement('img'))
-				.attr('src', slide.getThumbUrl())
-				.attr('alt', slide.getData().name)
-			)
+			.html(slide.getThumbHtml())
 			.on('click', function(event){
 				event.preventDefault();
 				self.itemOnClick(index);
 			});
 
+		var children = thumb.children();
+
+		if (children.length === 1) {
+			if (
+				children[0].nodeName.toLowerCase() === 'img'
+				|| children[0].nodeName.toLowerCase() === 'picture'
+			) {
+				thumb.attr('data-rsts-type', 'image');
+			}
+			if (children[0].nodeName.toLowerCase() === 'video') {
+				thumb.attr('data-rsts-type', 'video');
+			}
+		}
+
+		if (children.length) {
+			$.each(children[0].attributes, function(index, attr) {
+				if (attr.name.substr(0, 10) === 'data-rsts-') {
+					thumb.attr(attr.name, attr.value);
+				}
+			});
+		}
+
+		return thumb;
 	};
 
 	/**
