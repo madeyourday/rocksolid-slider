@@ -25,7 +25,10 @@ Rst.SliderNav = (function() {
 
 			this.elements.prev = $(document.createElement('a'))
 				.attr('href', '')
-				.text('prev')
+				.append($(document.createElement('span'))
+					.addClass(slider.options.cssPrefix + 'prev-label')
+					.text('prev')
+				)
 				.addClass(slider.options.cssPrefix + 'prev')
 				.on('click', function(event){
 					event.preventDefault();
@@ -34,12 +37,24 @@ Rst.SliderNav = (function() {
 
 			this.elements.next = $(document.createElement('a'))
 				.attr('href', '')
-				.text('next')
+				.append($(document.createElement('span'))
+					.addClass(slider.options.cssPrefix + 'next-label')
+					.text('next')
+				)
 				.on('click', function(event){
 					event.preventDefault();
 					self.slider.next();
 				})
 				.addClass(slider.options.cssPrefix + 'next');
+
+			if (this.slider.options.thumbControls) {
+				this.elements.prevThumb = $(document.createElement('div'))
+					.addClass(slider.options.cssPrefix + 'prev-thumb')
+					.appendTo(this.elements.prev);
+				this.elements.nextThumb = $(document.createElement('div'))
+					.addClass(slider.options.cssPrefix + 'next-thumb')
+					.appendTo(this.elements.next);
+			}
 
 			slider.elements.view
 				.append(this.elements.prev)
@@ -214,6 +229,11 @@ Rst.SliderNav = (function() {
 			});
 			this.activeIndexes = [slides.length];
 			this.elements[slides.length].children('a').addClass('active');
+		}
+
+		if (this.elements.prevThumb && this.elements.nextThumb) {
+			this.elements.prevThumb.html(this.slider.getSlide(indexes[0] - 1).getThumbHtml());
+			this.elements.nextThumb.html(this.slider.getSlide(indexes[indexes.length - 1] + 1).getThumbHtml());
 		}
 
 	};

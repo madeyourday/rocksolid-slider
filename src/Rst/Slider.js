@@ -322,6 +322,8 @@ Rst.Slider = (function() {
 		navType: 'bullets',
 		// false to hide the prev and next controls
 		controls: true,
+		// true to show thumbnails inside the prev and next controls
+		thumbControls: false,
 		// image scale mode (fit, crop, scale or none)
 		// use the attribute data-rsts-scale-mode to set the mode per slide
 		// only works if width and height are not set to "auto"
