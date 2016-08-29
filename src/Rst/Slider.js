@@ -1744,10 +1744,12 @@ Rst.Slider = (function() {
 		}
 
 		if (this.getVisibleCount() >= this.slides.length) {
+			this.elements.main.addClass(this.options.cssPrefix + 'dragging-disabled');
 			this.nav.hide();
 			this.stopAutoplay(true);
 		}
 		else {
+			this.elements.main.removeClass(this.options.cssPrefix + 'dragging-disabled');
 			this.nav.show();
 			if (visibleCountBefore >= this.slides.length) {
 				// restart autoplay
@@ -1934,7 +1936,8 @@ Rst.Slider = (function() {
 
 		if (
 			this.isDragging ||
-			(event.type === 'mousedown' && event.which !== 1)
+			(event.type === 'mousedown' && event.which !== 1) ||
+			this.getVisibleCount() >= this.slides.length
 		) {
 			return;
 		}
