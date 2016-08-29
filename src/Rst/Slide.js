@@ -31,6 +31,7 @@ Rst.Slide = (function() {
 
 		if (element.nodeName.toLowerCase() === 'script' && element.type === 'text/html') {
 			this.contentHtml = element.innerHTML.replace(/\\(.)/gi, '$1');
+			this.data.name = $(element).attr('data-rsts-name') || undefined;
 			this.data.thumbUrl = $(element).attr('data-rsts-thumb') || undefined;
 		}
 		else {
