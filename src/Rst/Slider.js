@@ -145,14 +145,12 @@ Rst.Slider = (function() {
 				.appendTo(this.elements.progress);
 		}
 
-		if (this.options.visibleArea < 1 || this.options.visibleAreaMax) {
-			this.elements.overlayPrev = $(document.createElement('div'))
-				.addClass(this.options.cssPrefix + 'overlay-prev')
-				.appendTo(this.elements.view);
-			this.elements.overlayNext = $(document.createElement('div'))
-				.addClass(this.options.cssPrefix + 'overlay-next')
-				.appendTo(this.elements.view);
-		}
+		this.elements.overlayPrev = $(document.createElement('div'))
+			.addClass(this.options.cssPrefix + 'overlay-prev')
+			.appendTo(this.elements.view);
+		this.elements.overlayNext = $(document.createElement('div'))
+			.addClass(this.options.cssPrefix + 'overlay-next')
+			.appendTo(this.elements.view);
 
 		this.nav = new Rst.SliderNav(this);
 
@@ -342,6 +340,7 @@ Rst.Slider = (function() {
 		thumbs: {
 			cssPrefix: 'rsts-thumbs-',
 			navType: 'none',
+			slideMinSize: 50,
 			slideMaxSize: 50,
 			preloadSlides: 10,
 			gapSize: 5,
@@ -1226,7 +1225,7 @@ Rst.Slider = (function() {
 		var gapSize = this.getGapSize();
 
 		// per slide position deviation (between -0.99... and +0.99...)
-		var deviation = (this.slideSize + gapSize) - (
+		var deviation = this.slidesCutOff ? 0 : (this.slideSize + gapSize) - (
 			((size[this.options.direction] * this.visibleAreaRate) + gapSize) / slidesCount
 		);
 
@@ -1304,8 +1303,7 @@ Rst.Slider = (function() {
 		) {
 			count = Math.floor((size + gapSize) / (this.options.slideMinSize + gapSize));
 		}
-
-		if (
+		else if (
 			this.options.slideMaxSize
 			&& (!count || (size - (gapSize * (count - 1))) / count > this.options.slideMaxSize)
 		) {
@@ -1458,6 +1456,37 @@ Rst.Slider = (function() {
 				- (gapSize * (visibleCount - 1))
 			) / visibleCount
 		);
+		this.slidesCutOff = false;
+
+		if ((
+			this.options.slideMinSize
+			&& this.slideSize < this.options.slideMinSize
+			&& visibleCount > 1
+		) || (
+			this.options.slideMaxSize
+			&& this.slideSize > this.options.slideMaxSize
+		)) {
+
+			this.slideSize = this.options.slideMinSize || this.options.slideMaxSize;
+			this.slidesCutOff = true;
+			this.visibleAreaRate = (visibleCount
+				* (this.slideSize + gapSize)
+				- gapSize
+			) / (this.options.direction === 'x' ? x : y);
+
+			// Recalculate proportions based on new visibleAreaRate
+			if (! this.options.width && this.proportion) {
+				x = this.viewSizeFixedCache.x = Math.round(((((
+					(((y + gapSize) / visibleRowsCount) - gapSize) * this.proportion
+				) + gapSize) * visibleCount) - gapSize) / this.visibleAreaRate);
+			}
+			if (! this.options.height && this.proportion) {
+				y = this.viewSizeFixedCache.y = Math.round(((Math.round(
+					((((x * this.visibleAreaRate) + gapSize) / visibleCount) - gapSize) / this.proportion
+				) + gapSize) * visibleRowsCount) - gapSize);
+			}
+
+		}
 
 		if (this.options.direction === 'x' ? y : x) {
 			this.rowSize = (gapSize > 0 ? Math.round : Math.ceil)((
@@ -1655,23 +1684,21 @@ Rst.Slider = (function() {
 			height: size.y
 		});
 
-		if (this.elements.overlayPrev && this.elements.overlayNext) {
-			if (this.options.direction === 'x') {
-				this.modify(this.elements.overlayPrev, {
-					width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
-				});
-				this.modify(this.elements.overlayNext, {
-					width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
-				});
-			}
-			else {
-				this.modify(this.elements.overlayPrev, {
-					height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
-				});
-				this.modify(this.elements.overlayNext, {
-					height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
-				});
-			}
+		if (this.options.direction === 'x') {
+			this.modify(this.elements.overlayPrev, {
+				width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
+			});
+			this.modify(this.elements.overlayNext, {
+				width: Math.round(size.x * (1 - this.visibleAreaRate) / 2)
+			});
+		}
+		else {
+			this.modify(this.elements.overlayPrev, {
+				height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
+			});
+			this.modify(this.elements.overlayNext, {
+				height: Math.round(size.y * (1 - this.visibleAreaRate) / 2)
+			});
 		}
 
 		var backupSize = size[this.options.direction];
