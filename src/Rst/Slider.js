@@ -316,7 +316,7 @@ Rst.Slider = (function() {
 		autoplayProgress: false,
 		// true to pause the autoplay on hover
 		pauseAutoplayOnHover: false,
-		// navigation type (bullets, numbers, tabs, none)
+		// navigation type (bullets, numbers, tabs, thumbs, none)
 		navType: 'bullets',
 		// false to hide the prev and next controls
 		controls: true,
