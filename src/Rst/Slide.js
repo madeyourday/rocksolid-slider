@@ -102,7 +102,6 @@ Rst.Slide = (function() {
 			!document.createElement('video').canPlayType
 			// iPhone doesn't support background videos
 			|| this.slider.device === 'iPhone'
-			|| this.slider.device === 'iPod'
 		) {
 			this.element.find('video[data-rsts-background]').each(function() {
 				var $this = $(this);

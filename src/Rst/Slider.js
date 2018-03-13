@@ -766,13 +766,15 @@ Rst.Slider = (function() {
 		this.css3Supported = false;
 
 		// currently only detecting mozilla is needed
-		this.engine = 'mozInnerScreenX' in window ? 'moz' : 'unknown';
+		this.engine = 'mozInnerScreenX' in window ? 'moz' :
+			(navigator.vendor && navigator.vendor.indexOf('Apple') !== -1)
+			? 'apple' : 'unknown';
 		this.device = navigator.platform;
-		if (this.device && this.device.indexOf('iPhone') === 0) {
+		if (this.device && (
+			this.device.indexOf('iPhone') === 0
+			|| this.device.indexOf('iPod') === 0
+		)) {
 			this.device = 'iPhone';
-		}
-		if (this.device && this.device.indexOf('iPod') === 0) {
-			this.device = 'iPod';
 		}
 
 		var el = document.createElement('div');
@@ -867,6 +869,14 @@ Rst.Slider = (function() {
 		element.stop();
 
 		if (animate && this.css3Supported) {
+			// Fix Safari bug with invisible slides, see #41
+			if (this.engine === 'apple') {
+				var origDisplay = element[0].style.display || '';
+				element[0].style.display = 'none';
+				element.height();
+				element[0].style.display = '';
+				element.height();
+			}
 			css['transition-timing-function'] = timingFunction ?
 				timingFunction : fromDrag ?
 				'cubic-bezier(0.390, 0.575, 0.565, 1.000)' :
@@ -874,13 +884,6 @@ Rst.Slider = (function() {
 			css['transition-duration'] = duration ? duration + 'ms' :
 				this.options.duration * durationScale + 'ms';
 			element.css(css);
-			// Fix iOS Safari bug with invisible slides, see #41
-			if (['iPhone', 'iPad', 'iPod'].indexOf(this.device) !== -1) {
-				var origHeight = element[0].style.height || '';
-				element[0].style.height = '0';
-				element.height();
-				element[0].style.height = origHeight;
-			}
 		}
 		else if (animate) {
 			element.animate(css, {
