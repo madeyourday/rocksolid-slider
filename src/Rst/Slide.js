@@ -824,11 +824,6 @@ Rst.Slide = (function() {
 
 		}
 
-		// iPad needs a close button outside of the video
-		if (this.slider.device === 'iPad') {
-			this.element.addClass(this.slider.options.cssPrefix + 'video-ipad');
-		}
-
 		this.videoStopButton = $(document.createElement('a'))
 			.attr('href', this.data.video || '')
 			.text('stop')
