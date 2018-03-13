@@ -272,37 +272,46 @@ Rst.SliderNav = (function() {
 			this.css('display', '');
 		});
 
-		if (visibleCount < 2 || !this.slider.options.combineNavItems) {
-			return;
-		}
+		if (visibleCount >= 2 && this.slider.options.combineNavItems) {
 
-		var lastIndex;
-		for (var i = 0; this.elements[i]; i++) {
-			if (
-				(i - Math.floor((visibleCount - 1) / 2)) % visibleCount
-				|| (i - Math.floor((visibleCount - 1) / 2)) > slides.length - visibleCount
-			) {
-				this.elements[i].css('display', 'none');
+			var lastIndex;
+			for (var i = 0; this.elements[i]; i++) {
+				if (
+					(i - Math.floor((visibleCount - 1) / 2)) % visibleCount
+					|| (i - Math.floor((visibleCount - 1) / 2)) > slides.length - visibleCount
+				) {
+					this.elements[i].css('display', 'none');
+				}
+				else {
+					lastIndex = i;
+				}
+			}
+
+			if (slides.length % visibleCount === 0) {
+				this.elements[
+					slides.length - visibleCount
+					+ Math.floor((visibleCount - 1) / 2)
+				].css('display', '');
 			}
 			else {
-				lastIndex = i;
+				var newIndex = slides.length
+					- (slides.length % visibleCount || visibleCount)
+					+ Math.floor((visibleCount - 1) / 2);
+				this.elements[slides.length] = this.createNavItem(
+					newIndex,
+					slides[newIndex >= slides.length ? slides.length - 1 : newIndex].getData()
+				).insertAfter(this.elements[slides.length - 1]);
 			}
+
 		}
 
-		if (slides.length % visibleCount === 0) {
-			this.elements[
-				slides.length - visibleCount
-				+ Math.floor((visibleCount - 1) / 2)
-			].css('display', '');
-		}
-		else {
-			var newIndex = slides.length
-				- (slides.length % visibleCount || visibleCount)
-				+ Math.floor((visibleCount - 1) / 2);
-			this.elements[slides.length] = this.createNavItem(
-				newIndex,
-				slides[newIndex >= slides.length ? slides.length - 1 : newIndex].getData()
-			).insertAfter(this.elements[slides.length - 1]);
+		if (this.slider.options.navType === 'numbers') {
+			for (var j = 0, count = 0; this.elements[j]; j++) {
+				if (this.elements[j][0].style.display !== 'none') {
+					count++;
+					this.elements[j].children().text(count);
+				}
+			}
 		}
 
 	};
