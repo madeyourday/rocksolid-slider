@@ -27,7 +27,7 @@ Rst.SliderNav = (function() {
 				.attr('href', '')
 				.append($(document.createElement('span'))
 					.addClass(slider.options.cssPrefix + 'prev-label')
-					.text('prev')
+					.text(slider.options.labels.prev)
 				)
 				.addClass(slider.options.cssPrefix + 'prev')
 				.on('click', function(event){
@@ -39,7 +39,7 @@ Rst.SliderNav = (function() {
 				.attr('href', '')
 				.append($(document.createElement('span'))
 					.addClass(slider.options.cssPrefix + 'next-label')
-					.text('next')
+					.text(slider.options.labels.next)
 				)
 				.on('click', function(event){
 					event.preventDefault();
@@ -88,7 +88,8 @@ Rst.SliderNav = (function() {
 						visibleAreaAlign: slider.options.visibleAreaAlign,
 						loop: slider.options.loop,
 						duration: slider.options.duration,
-						controls: slider.options.controls
+						controls: slider.options.controls,
+						labels: slider.options.labels
 					}, slider.options.thumbs || {})
 				);
 				this.setActive([0]);
@@ -98,7 +99,7 @@ Rst.SliderNav = (function() {
 
 				this.elements.mainPrev = $(document.createElement('a'))
 					.attr('href', '')
-					.text('prev')
+					.text(slider.options.labels.prev)
 					.on('click', function(event){
 						event.preventDefault();
 						self.slider.prev();
@@ -110,7 +111,7 @@ Rst.SliderNav = (function() {
 
 				this.elements.mainNext = $(document.createElement('a'))
 					.attr('href', '')
-					.text('next')
+					.text(slider.options.labels.next)
 					.on('click', function(event){
 						event.preventDefault();
 						self.slider.next();

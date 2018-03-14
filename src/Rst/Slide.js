@@ -254,7 +254,7 @@ Rst.Slide = (function() {
 			this.data.video = this.content.attr('data-rsts-video');
 			this.videoStartButton = $(document.createElement('a'))
 				.attr('href', this.data.video || '')
-				.text('play')
+				.text(this.slider.options.labels.play)
 				.addClass(this.slider.options.cssPrefix + 'video-play')
 				.on('click', function(event) {
 					event.preventDefault();
@@ -825,7 +825,7 @@ Rst.Slide = (function() {
 
 		this.videoStopButton = $(document.createElement('a'))
 			.attr('href', this.data.video || '')
-			.text('stop')
+			.text(this.slider.options.labels.stop)
 			.addClass(this.slider.options.cssPrefix + 'video-stop')
 			.on('click', function(event) {
 				event.preventDefault();

@@ -338,9 +338,16 @@ Rst.Slider = (function() {
 		keyboard: true,
 		// true to enable caption elements inside slides
 		captions: true,
+		// key value pairs for button labels
+		labels: {
+			'prev': 'Previous',
+			'next': 'Next',
+			'play': 'Play',
+			'stop': 'Stop',
+		},
 		// options for the thumbnail slider (same as main slider options)
 		// the following options inherit from the main options:
-		// visibleArea, visibleAreaMax, visibleAreaAlign, loop, duration, controls
+		// visibleArea, visibleAreaMax, visibleAreaAlign, loop, duration, controls, labels
 		thumbs: {
 			cssPrefix: 'rsts-thumbs-',
 			navType: 'none',
