@@ -877,7 +877,7 @@ Rst.Slider = (function() {
 
 		if (animate && this.css3Supported) {
 			// Fix Safari bug with invisible slides, see #41
-			if (this.engine === 'apple') {
+			if (this.engine === 'apple' && css.transform) {
 				var origDisplay = element[0].style.display || '';
 				element[0].style.display = 'none';
 				element.height();
