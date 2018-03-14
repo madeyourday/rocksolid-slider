@@ -1308,17 +1308,20 @@ Rst.Slider = (function() {
 		var gapSize = this.getGapSize();
 		var count = this.options.slideMaxCount;
 
-		if (
-			this.options.slideMinSize
-			&& (!count || (size - (gapSize * (count - 1))) / count < this.options.slideMinSize)
-		) {
+		if (this.options.slideMinSize && !count) {
 			count = Math.floor((size + gapSize) / (this.options.slideMinSize + gapSize));
 		}
-		else if (
+		if (
 			this.options.slideMaxSize
 			&& (!count || (size - (gapSize * (count - 1))) / count > this.options.slideMaxSize)
 		) {
 			count = Math.ceil((size + gapSize) / (this.options.slideMaxSize + gapSize));
+		}
+		if (
+			this.options.slideMinSize
+			&& (size - (gapSize * (count - 1))) / count < this.options.slideMinSize
+		) {
+			count = Math.floor((size + gapSize) / (this.options.slideMinSize + gapSize));
 		}
 
 		return Math.min(this.slides.length, Math.max(1, count));
@@ -1478,7 +1481,7 @@ Rst.Slider = (function() {
 			&& this.slideSize > this.options.slideMaxSize
 		)) {
 
-			this.slideSize = this.options.slideMinSize || this.options.slideMaxSize;
+			this.slideSize = this.options.slideMaxSize || this.options.slideMinSize;
 			this.slidesCutOff = true;
 			this.visibleAreaRate = (visibleCount
 				* (this.slideSize + gapSize)
