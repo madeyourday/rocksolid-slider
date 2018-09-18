@@ -201,9 +201,6 @@ Rst.Slider = (function() {
 					}
 				}
 			);
-			this.elements.crop.css({
-				transform: 'translateZ(0)'
-			});
 		}
 
 		if (this.options.pauseAutoplayOnHover) {
@@ -497,6 +494,15 @@ Rst.Slider = (function() {
 		}
 
 		if (this.options.type === 'slide') {
+			// Fix Safari bug with invisible slides, see #41
+			if (this.engine === 'apple') {
+				// Apply 3d transform
+				this.elements.crop.css('transform', 'translateZ(0)');
+				// Get the css value to ensure the engine applies the styles
+				this.elements.crop.css('transform');
+				// Restore the original value
+				this.elements.crop.css('transform', '');
+			}
 			this.modify(this.elements.slides, {
 				offset: targetPos
 			}, true, durationScale, fromDrag, !fromDrag && overflow);
@@ -876,14 +882,6 @@ Rst.Slider = (function() {
 		element.stop();
 
 		if (animate && this.css3Supported) {
-			// Fix Safari bug with invisible slides, see #41
-			if (this.engine === 'apple' && css.transform) {
-				var origDisplay = element[0].style.display || '';
-				element[0].style.display = 'none';
-				element.height();
-				element[0].style.display = '';
-				element.height();
-			}
 			css['transition-timing-function'] = timingFunction ?
 				timingFunction : fromDrag ?
 				'cubic-bezier(0.390, 0.575, 0.565, 1.000)' :

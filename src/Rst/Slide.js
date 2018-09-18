@@ -222,12 +222,12 @@ Rst.Slide = (function() {
 
 			// Fix safari bug with invisible images, see #9
 			if (self.slider.css3Supported) {
-				// Remove 3d transforms
-				self.slider.elements.crop.css('transform', '');
+				// Apply 3d transform
+				self.slider.elements.crop.css('transform', 'translateZ(0)');
 				// Get the css value to ensure the engine applies the styles
 				self.slider.elements.crop.css('transform');
 				// Restore the original value
-				self.slider.elements.crop.css('transform', 'translateZ(0)');
+				self.slider.elements.crop.css('transform', '');
 			}
 
 		};
