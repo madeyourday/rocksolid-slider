@@ -277,8 +277,8 @@ Rst.Slide = (function() {
 	 * @var object regular expressions for video URLs
 	 */
 	Slide.prototype.videoRegExp = {
-		youtube: /^https?:\/\/(?:(?:www\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\?|#|\/)(?:(?:.*[?&#]|)t=([0-9hms]+))?/i,
-		youtubePlayer: /^https?:\/\/(?:www\.)?youtube\.com\/embed\/[0-9a-z_\-]{11}/i,
+		youtube: /^https?:\/\/(?:(?:www\.)?youtube(?:-nocookie)?\.com\/(?:watch\?v=|v\/|embed\/)|youtu\.be\/)([0-9a-z_\-]{11})(?:$|&|\?|#|\/)(?:(?:.*[?&#]|)t=([0-9hms]+))?/i,
+		youtubePlayer: /^https?:\/\/(?:www\.)?youtube(?:-nocookie)?\.com\/embed\/[0-9a-z_\-]{11}/i,
 		vimeo: /^https?:\/\/(?:player\.)?vimeo\.com\/(?:video\/)?([0-9]+)(?:.*#t=([0-9hms]+))?/i,
 		vimeoPlayer: /^https?:\/\/player\.vimeo\.com\/video\/[0-9]+/i
 	};
@@ -711,7 +711,11 @@ Rst.Slide = (function() {
 				time = time[0] + (time[1] * 60) + (time[2] * 60 * 60);
 			}
 
-			src = 'https://www.youtube.com/embed/' + videoId;
+			src = 'https://www.youtube'+(
+				this.data.video.indexOf('youtube-nocookie.com') === -1
+					? ''
+					: '-nocookie'
+			)+'.com/embed/' + videoId;
 			if (this.data.video.match(this.videoRegExp.youtubePlayer)) {
 				src = this.data.video;
 			}
