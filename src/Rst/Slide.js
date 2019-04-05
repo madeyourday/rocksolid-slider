@@ -263,6 +263,7 @@ Rst.Slide = (function() {
 				.appendTo(this.element);
 
 			if (!this.data.video && this.element.find('video').last().length) {
+				this.videoControlsEnabled = !!this.element.find('video').last()[0].controls;
 				this.element.find('video').last()[0].controls = false;
 				this.element.find('video').last().on('ended', function() {
 					self.stopVideo(true);
@@ -692,7 +693,7 @@ Rst.Slide = (function() {
 		if (!this.data.video) {
 
 			var video = this.element.find('video').last();
-			video[0].controls = true;
+			video[0].controls = this.videoControlsEnabled;
 			video[0].play();
 			this.videoStartButton.css('display', 'none');
 
