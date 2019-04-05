@@ -171,7 +171,9 @@ Rst.Slider = (function() {
 		// Resize again for edge cases when combineItems changed the nav height
 		this.resize();
 
-		this.autoplay();
+		if (!this.autoplayStopped) {
+			this.autoplay();
+		}
 
 		$(window).on('domready.rsts load.rsts', function(){
 			if (self.windowSizeHasChanged()) {
