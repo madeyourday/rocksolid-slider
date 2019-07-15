@@ -214,9 +214,20 @@ Rst.Slide = (function() {
 		}
 
 		var mediaLoadEventFired = false;
+		var loadedSources = {};
 		var mediaLoadEvent = function() {
 
 			mediaLoadEventFired = true;
+
+			// Only handle load event once per source,
+			// fixes bug in Chrome https://crbug.com/984121
+			var src = event && event.target && (event.target.currentSrc || event.target.src);
+			if (src) {
+				if (loadedSources[src]) {
+					return;
+				}
+				loadedSources[src] = true;
+			}
 
 			self.slider.resize(self.data.index);
 
