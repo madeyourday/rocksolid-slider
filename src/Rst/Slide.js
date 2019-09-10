@@ -223,10 +223,11 @@ Rst.Slide = (function() {
 			// fixes bug in Chrome https://crbug.com/984121
 			var src = event && event.target && (event.target.currentSrc || event.target.src);
 			if (src) {
-				if (loadedSources[src]) {
+				var srcKey = ((event && event.type) || 'none') + '\n' + src;
+				if (loadedSources[srcKey]) {
 					return;
 				}
-				loadedSources[src] = true;
+				loadedSources[srcKey] = true;
 			}
 
 			self.slider.resize(self.data.index);
@@ -244,7 +245,7 @@ Rst.Slide = (function() {
 		};
 
 		this.element.find('img').on('load', mediaLoadEvent);
-		this.element.find('video').on('loadedmetadata', mediaLoadEvent);
+		this.element.find('video').on('loadedmetadata loadeddata', mediaLoadEvent);
 
 		// Fix IE11 bug with missing load event, see #33
 		if (this.element.find('img').length && !this.element.find('img')[0].complete) {
