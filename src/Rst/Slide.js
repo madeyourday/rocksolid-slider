@@ -215,7 +215,7 @@ Rst.Slide = (function() {
 
 		var mediaLoadEventFired = false;
 		var loadedSources = {};
-		var mediaLoadEvent = function() {
+		var mediaLoadEvent = function(event) {
 
 			mediaLoadEventFired = true;
 
