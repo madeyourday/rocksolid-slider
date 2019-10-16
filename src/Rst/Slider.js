@@ -497,7 +497,7 @@ Rst.Slider = (function() {
 
 		if (this.options.type === 'slide') {
 			// Fix Safari bug with invisible slides, see #41
-			if (this.engine === 'apple') {
+			if (/Apple/.test(navigator.vendor)) {
 				// Apply 3d transform
 				this.elements.crop.css('transform', 'translateZ(0)');
 				// Get the css value to ensure the engine applies the styles
@@ -779,18 +779,6 @@ Rst.Slider = (function() {
 		var self = this;
 
 		this.css3Supported = false;
-
-		// currently only detecting mozilla is needed
-		this.engine = 'mozInnerScreenX' in window ? 'moz' :
-			(navigator.vendor && navigator.vendor.indexOf('Apple') !== -1)
-			? 'apple' : 'unknown';
-		this.device = navigator.platform;
-		if (this.device && (
-			this.device.indexOf('iPhone') === 0
-			|| this.device.indexOf('iPod') === 0
-		)) {
-			this.device = 'iPhone';
-		}
 
 		var el = document.createElement('div');
 		document.body.appendChild(el);
