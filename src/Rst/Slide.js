@@ -100,8 +100,8 @@ Rst.Slide = (function() {
 		if (
 			// Check if video element is supported
 			!document.createElement('video').canPlayType
-			// iPhone doesn't support background videos
-			|| this.slider.device === 'iPhone'
+			// Old iPhones don’t support background videos
+			|| (/^iPhone|^iPod/.test(navigator.platform) && !window.matchMedia('(-webkit-video-playable-inline)').matches)
 		) {
 			this.element.find('video[data-rsts-background]').each(function() {
 				var $this = $(this);
@@ -144,7 +144,7 @@ Rst.Slide = (function() {
 				element = element.parent();
 			}
 			if (element.is('video')) {
-				element.attr('autoplay', true).attr('loop', true);
+				element.attr('autoplay', true).attr('loop', true).attr('playsinline', true).attr('webkit-playsinline', true);
 			}
 			element.css({
 				position: 'absolute',
