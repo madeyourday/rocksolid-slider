@@ -1630,6 +1630,9 @@ Rst.Slider = (function() {
 				|| this.elements.main.css('position') === 'relative'
 			) {
 				// Prevent scrolling issues, see #18
+				document.documentElement.style.overflowAnchor = document.body.style.overflowAnchor = 'none';
+				// Get a css value to ensure the engine applies the styles
+				this.element.height();
 				this.elements.main.css(
 					'margin-bottom',
 					this.elements.main.outerHeight(true) + 100 + 'px'
@@ -1656,6 +1659,7 @@ Rst.Slider = (function() {
 			if (this.elements.footer) {
 				this.elements.footer.css({display: ''});
 			}
+			document.documentElement.style.overflowAnchor = document.body.style.overflowAnchor = '';
 			this.elements.main.css('margin-bottom', '');
 			if (pauseAutoplay) {
 				this.playAutoplay();
