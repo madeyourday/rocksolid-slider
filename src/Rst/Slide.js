@@ -174,6 +174,10 @@ Rst.Slide = (function() {
 			}
 		});
 
+		this.element.find('img[loading=lazy]').each(function() {
+			this.loading = 'eager';
+		});
+
 		if (this.content.attr('data-rsts-thumb')) {
 			this.data.thumbUrl = this.content.attr('data-rsts-thumb');
 		}
