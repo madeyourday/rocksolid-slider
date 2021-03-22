@@ -1666,6 +1666,12 @@ Rst.Slider = (function() {
 			}
 		}
 
+		// Fix issues with min-content contribution in grid and flex layouts
+		this.modify(this.elements.crop, {
+			width: '',
+			height: ''
+		});
+
 		this.nav.resize();
 
 		var size = this.getViewSize(this.slideIndex);
