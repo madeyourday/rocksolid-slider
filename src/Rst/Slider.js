@@ -1668,8 +1668,7 @@ Rst.Slider = (function() {
 
 		// Fix issues with min-content contribution in grid and flex layouts
 		this.modify(this.elements.crop, {
-			width: '',
-			height: ''
+			width: '100%'
 		});
 
 		this.nav.resize();
