@@ -1075,6 +1075,10 @@ Rst.Slider = (function() {
 					self.modify(slide.element, {opacity: 0});
 				}
 				self.elements.slides.append(slide.element);
+				// Force Chrome to recalculate responsive images
+				slide.element.find('img').each(function () {
+					this.src += '';
+				});
 				slide.size(size.x, size.y);
 			}
 			else if (

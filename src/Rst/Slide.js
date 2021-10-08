@@ -228,10 +228,10 @@ Rst.Slide = (function() {
 			var src = event && event.target && (event.target.currentSrc || event.target.src);
 			if (src) {
 				var srcKey = ((event && event.type) || 'none') + '\n' + src;
-				if (loadedSources[srcKey]) {
+				if ((loadedSources[srcKey] || 0) > Date.now() - 100) {
 					return;
 				}
-				loadedSources[srcKey] = true;
+				loadedSources[srcKey] = Date.now();
 			}
 
 			self.slider.resize(self.data.index);
