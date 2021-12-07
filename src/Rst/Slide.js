@@ -545,7 +545,7 @@ Rst.Slide = (function() {
 			}
 			else {
 				var img = new Image();
-				img.src = element[0].src;
+				img.src = element[0].currentSrc || element[0].src;
 				size.x = img.width;
 				size.y = img.height;
 			}
@@ -558,14 +558,24 @@ Rst.Slide = (function() {
 
 		}
 
+		if ((!size.x || !size.y) && element.is('img') && element.parent().is('picture')) {
+			element.parent().children('source[width][height]').each(function() {
+				if ($(this).attr('media') && !window.matchMedia($(this).attr('media')).matches) {
+					return;
+				}
+				size.x = parseFloat($(this).attr('width'));
+				size.y = parseFloat($(this).attr('height'));
+				return false;
+			});
+		}
+
+		if ((!size.x || !size.y) && (element.attr('width') || element.attr('height'))) {
+			size.x = parseFloat(element.attr('width') || element.attr('height'));
+			size.y = parseFloat(element.attr('height') || element.attr('width'));
+		}
+
 		if (!size.x || !size.y) {
-			if (element.attr('width') || element.attr('height')) {
-				size.x = parseFloat(element.attr('width') || element.attr('height'));
-				size.y = parseFloat(element.attr('height') || element.attr('width'));
-			}
-			else {
-				size.x = size.y = 0;
-			}
+			size.x = size.y = 0;
 		}
 
 		return size;
