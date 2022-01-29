@@ -61,6 +61,8 @@ Rst.Slide = (function() {
 
 		this.content = $(element);
 
+		this.element.addClass(this.content.attr('data-rsts-slide-class'));
+
 		var sliderClasses = this.content.attr('data-rsts-class');
 
 		this.data.name = this.content.attr('data-rsts-name') || this.content.attr('title');
